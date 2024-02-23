@@ -1,0 +1,246 @@
+#+TITLE: In-buffer completion for org-mode links
+#+AUTHOR: AKIYAMA Kouhei
+
+(This document was machine translated from [[file:README-ja.org][README-ja.org]])
+
+* Overview
+
+This Emacs Lisp library allows completion-at-point (M-TAB, C-M-i, or ESC TAB) within org-mode link notation.
+
+It provides an extensible framework for parsing where a point is and calling the appropriate function depending on the location within the link and the link type.
+
+The default completions are as follows.
+
+- Link type part
+- ~file:~ (or ~file+sys:~ ~file+emacs:~) link type path and description parts
+
+Other parts require the user to add completion functions.
+
+Another library that provides completion functions using this library is:
+
+- [[https://github.com/misohena/org-elisp-link][org-elisp-link.el]] :: Define link types that refer to definition of Emacs Lisp language elements ( ~elisp-library:~ ~elisp-function Add :~ ~elisp-variable:~ ~elisp-face:~). In addition to standard properties such as ~:follow~ ~:export~ ~:store~ ~:activate-func~ ~:complete~, this library also defines :capf-path and :capf-desc properties.
+
+Also, as a usage example, I'll show you a function I use later that completes links to blog posts.
+
+* Setup
+
+Place org-link-completion.el in load-path and add the following code to init.el.
+
+#+begin_src elisp
+(autoload 'org-link-completion-setup "org-link-completion" nil t)
+(with-eval-after-load "org"
+  (org-link-completion-setup))
+#+end_src
+
+You can also look at the contents of the org-link-completion-setup function and extract and set up only the necessary elements. For example:
+
+#+begin_src elisp
+(with-eval-after-load "org"
+  ;; org-modeのバッファに補完関数を追加する。
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (add-hook 'completion-at-point-functions
+                        'org-link-completion-at-point nil t)))
+
+  ;; file: file+sys: file+desc のパス部分、説明部分の補完を追加する。
+  (dolist (type '("file" "file+sys" "file+emacs"))
+    (org-link-set-parameters
+     type
+     :capf-path 'org-link-completion-capf-path-file
+     :capf-desc 'org-link-completion-capf-desc-file)))
+#+end_src
+
+* Functions called by org-link-completion-at-point function
+
+In this library, each part of the link is classified as follows.
+
+: [[<type>:<path>][<description>
+
+The org-link-completion-at-point function analyzes the area around the point, and then calls the following function depending on where the point is in the link and what the link type (<type>) is. Decide as follows.
+
+- Point is in <type> => org-link-completion-capf-type variable (default: org-link-completion-capf-type-default function)
+
+- <type> is empty:
+   - Point is in <path> => org-link-completion-capf-path-untyped variable (default: org-link-completion-capf-path-untyped-default function)
+   - Point is in <desc> => org-link-completion-capf-desc-untyped variable (default: org-link-completion-capf-desc-untyped-default function)
+
+- <type> is a valid link type (contained in the org-link-parameters variable):
+   Get the function from the following properties of link type <type> set in the org-link-parameters variable and call it:
+   - Point is in <path> => :capf-path property of link type <type>
+   - Point is in <desc> => :capf-desc property of link type <type>
+   - If the above properties are missing => :completino-at-point property
+     (The function set for this property must change its behavior depending on the part where the point is.)
+
+No arguments are passed to functions called from the org-link-completion-at-point function. However, it caches the parsed information in the org-link-completion-pos variable before calling it. The called function can refer to that information or ignore it and re-analyze it as needed.
+
+The called function must return the same format as the function registered with completion-at-point-functions. Please refer to the elisp manual for details.
+
+[[https://www.gnu.org/software/emacs/manual/html_node/elisp/Completion-in-Buffers.html][Completion in Buffers (GNU Emacs Lisp Reference Manual)]] ([[https:// ayatakesi.github.io/lispref/29.2/html/Completion-in-Buffers.html][ayatakesi's Japanese translation (29.2)]])
+
+* Parsing links and getting results
+
+Link analysis is performed by the org-link-completion-parse-at-point function.
+
+This function takes no arguments, looks before and after the point, and returns the region where the point is and the range of each region before the point.
+
+#+begin_src elisp
+(WHERE TYPE-BEG TYPE-END [ PATH-BEG PATH-END [ DESC-BEG DESC-END ] ])
+;; WHERE ::= type | path | desc
+#+end_src
+
+Functions called from the org-link-completion-at-point function usually do not need to call this function directly. The cached result is stored in the org-link-completion-pos variable, so you can retrieve it from there. However, it is possible to write code for the case where there are no cached values.
+
+#+begin_src elisp
+(when-let ((pos (or org-link-completion-pos
+                    ;; If there is no cache, analyze it yourself
+                    (org-link-completion-parse-at-point))))
+  ;; Processing that returns completion candidates
+  )
+#+end_src
+
+Use dedicated accessor macros to retrieve each element of the analysis result.
+
+#+begin_src elisp
+(when-let ((pos (or org-link-completion-pos
+                    (org-link-completion-parse-at-point))))
+  (let ((where (org-link-completion-pos-ref pos where)) ;; Expands to (nth 0 pos)
+        (path-beg (org-link-completion-pos-ref pos path-beg)) ;; Expands to (nth 3 pos)
+        (path-end (org-link-completion-pos-ref pos path-end))) ;; Expands to (nth 4 pos)
+    (when (eq where 'path)
+      (list
+       path-beg path-end
+       ;; Write a list of suggestions here
+       ))))
+#+end_src
+
+Macros are also available to make writing these processes easier. The following code is equivalent to the above.
+
+#+begin_src elisp
+(org-link-completion-parse-let :path (path-beg path-end)
+  (list
+   path-beg path-end
+   ;; Write a list of suggestions here
+   ))
+#+end_src
+
+* Example of creating a link type for your own blog
+
+I'm using Org2blog to write a blog, and I've defined a special link type to represent links to blog posts. Using this, I can write the following in an org-mode file.
+
+#+begin_src org
+I previously wrote an article called [[blog:2024-02-23-org-link-completion-at-point][Completion in buffer in link part of org-mode]].
+#+end_src
+
+Pressing C-c C-o on this link will jump to that org file, and exporting will output the URL on the web. It also supports storing links with C-c l, as well as completing paths and generating default values for descriptions when using C-c C-l.
+
+However, it did not support completion within the buffer, that is, completion-at-point. So I'll try to accommodate that.
+
+Blogs are managed in the following list:
+
+#+begin_src elisp
+(defvar my-blog-list
+  '((:link-type "blog"
+                :post-url "https://example.com/blog/%s.html"
+                :local-dir "~/org/blog/"
+                :title "My Main Blog")
+    (:link-type "subblog"
+                :post-url "https://example.com/subblog/%s.html"
+                :local-dir "~/org/subblog/"
+                :title "My Sub Blog")))
+
+(defun my-blog-from-link-type (link-type)
+  "Return blog information from link type in org-mode."
+  (when (stringp link-type)
+    (seq-find (lambda (blog)
+                (string= (plist-get blog :link-type) link-type))
+              my-blog-list)))
+#+end_src
+
+Since there are multiple blogs, multiple blogs can be defined in my-blog-list. One uses the link type ~blog:~ and the other uses the link type ~subblog:~ (~:link-type~ property).
+
+The original blog files are written in org-mode, and are all stored under a specific directory (~:local_dir~ property) with file names that include the permalink name with an extension (.org).
+
+Therefore, to complete the path part of the link, it seems to be a good idea to enumerate the .org files from the directory where the original blog file is stored, and remove the extension from the file name and use it as a completion candidate. The following code does that.
+
+#+begin_src elisp
+(defun my-org-blog-link-capf-path ()
+  "Complete the path part of the link on point.
+
+I expect it to be called when you press C-M-i somewhere like this:
+     [[blog:<permalink>(here)
+     [[subblog:<permalink>(here)"
+  (org-elisp-link-capf-parse-let :path (type path-beg path-end)
+    (let ((blog (my-blog-from-link-type type)))
+      (when blog
+        (list
+         path-beg path-end
+         (cl-loop for file in (directory-files (plist-get blog :local-dir))
+                  when (string-match "\\`\\(.+\\)\\.org\\'" file)
+                  collect (match-string 1 file))
+         :company-kind (lambda (_) 'file))))))
+#+end_src
+
+Registering this function in org-link-parameters enables completion using C-M-i for the path part of ~blog:~ links.
+
+#+begin_src elisp
+(dolist (blog my-blog-list)
+  (org-link-set-parameters (plist-get blog :link-type)
+                           :capf-path #'my-org-blog-link-capf-path))
+#+end_src
+
+Next, I'll implement completion for the description part. What kind of candidates should be provided for the description part? I thought that I would like the titles of the posts to be completed. In addition to two types of candidates, those with blog titles and those without, I also plan to include the original permalinks as candidates.
+
+#+begin_src elisp
+(defun my-org-blog-link-capf-desc ()
+  "Complete the description part of the link on the point.
+
+I expect it to be called when you press C-M-i somewhere like this:
+     [[blog:<permalink>][<description>(here)
+     [[subblog:<permalink>][<description>(here)"
+  (org-elisp-link-capf-parse-let :desc (type path desc-beg desc-end)
+    (let* ((blog (my-blog-from-link-type type)))
+      (when blog
+        (let* ((title (let* ((dir (plist-get blog :local-dir))
+                             (file (expand-file-name (concat path ".org") dir)))
+                        (my-org-blog-org-file-title file))))
+          (list
+           desc-beg desc-end
+           (append
+            (when title
+              (list title
+                    (concat title " | " (plist-get blog :title))))
+            (list path))))))))
+
+(defun my-org-blog-org-file-title (file)
+  "Get title from FILE written in org-mode."
+  (when (file-regular-p file)
+    (with-temp-buffer
+      (insert-file-contents file nil nil 16384) ;; It's probably near the top.
+      (goto-char (point-min))
+      (let ((case-fold-search t))
+        (when (re-search-forward
+               "^#\\+TITLE: *\\(.*\\)$" nil t)
+          (match-string-no-properties 1))))))
+#+end_src
+
+I extracted the title of the post from the beginning of the .org file, where it says ~#+TITLE:~. Although this code does not do this, if it is opened in Emacs, it may be a good idea to also extract it from the buffer.
+
+Register this in org-link-parameters as before.
+
+#+begin_src elisp
+(dolist (blog my-blog-list)
+  (org-link-set-parameters (plist-get blog :link-type)
+                           :capf-desc #'my-org-blog-link-capf-desc))
+#+end_src
+
+Other operations (:follow, :store, :export, :complete, :insert-description) are omitted as they are outside the purpose of this library. Please feel free to write as you like.
+
+* License
+
+This software is licensed under GPLv3. You are free to use, modify and distribute this software.
+
+If you wish to register this software in any package archive, please fork this repository, make the necessary modifications to fit the package archive's requirements, and submit the registration on your own. Also continue with the necessary maintenance. You don't need my permission.
+
+I also welcome you to publish your improved version. If that works better than mine, I might start using it too. I may suddenly be unable to develop, and I cannot guarantee any continued development. This software is the result of what I want, so please add what you want yourself.
+
+I am not proficient in English, so please do not expect continuous communication in English.

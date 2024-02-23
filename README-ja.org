@@ -1,0 +1,244 @@
+#+TITLE: org-modeリンクのバッファ内補完
+#+AUTHOR: AKIYAMA Kouhei
+
+* 概要
+
+このEmacs Lispライブラリは、org-modeのリンク表記内で completion-at-point (M-TAB、C-M-i、またはESC TAB) できるようにします。
+
+ポイントがある場所を解析し、リンク内の部位やリンクタイプに応じて適切な関数を呼び出すための拡張可能な枠組みを提供します。
+
+デフォルトで提供している補完は次の通りです。
+
+- リンクタイプ部分
+- ~file:~ (または ~file+sys:~ ~file+emacs:~)リンクタイプのパス部分と説明部分
+
+他の部分はユーザーが補完関数を追加する必要があります。
+
+このライブラリを使用した補完関数を提供する別のライブラリとして次のものがあります。
+
+- [[https://github.com/misohena/org-elisp-link][org-elisp-link.el]] :: Emacs Lispの言語要素へのリンクタイプ ~elisp-library:~ ~elisp-function:~ ~elisp-variable:~ ~elisp-face:~ を追加します。 ~:follow~ ~:export~ ~:store~ ~:activate-func~ ~:complete~ といった標準的なプロパティの他に、本ライブラリが使う :capf-path や  :capf-desc プロパティも定義しています。
+
+また、使用例として、私が使っているブログ投稿へのリンクを補完する関数を後ほど紹介します。
+
+* セットアップ
+
+org-link-completion.elをload-pathの通った場所に配置して、init.elに次のコードを追加してください。
+
+#+begin_src elisp
+(autoload 'org-link-completion-setup "org-link-completion" nil t)
+(with-eval-after-load "org"
+  (org-link-completion-setup))
+#+end_src
+
+org-link-completion-setup関数の中身を見て、必要な要素だけを抜き出してセットアップすることもできます。例えば次のように:
+
+#+begin_src elisp
+(with-eval-after-load "org"
+  ;; org-modeのバッファに補完関数を追加する。
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (add-hook 'completion-at-point-functions
+                        'org-link-completion-at-point nil t)))
+
+  ;; file: file+sys: file+desc のパス部分、説明部分の補完を追加する。
+  (dolist (type '("file" "file+sys" "file+emacs"))
+    (org-link-set-parameters
+     type
+     :capf-path 'org-link-completion-capf-path-file
+     :capf-desc 'org-link-completion-capf-desc-file)))
+#+end_src
+
+* org-link-completion-at-point関数が呼び出す関数
+
+本ライブラリではリンク内の各部位を次のように分類しています。
+
+: [[<type>:<path>][<description>
+
+org-link-completion-at-point関数は、ポイントがある場所の周辺を解析したあと、ポイントがリンク内のどの部位にあるかやリンクタイプ(<type>)が何かによって呼び出す関数を次のように決定します。
+
+- ポイントが<type>の部分にある => org-link-completion-capf-type 変数(デフォルト: org-link-completion-capf-type-default 関数)
+
+- <type>が空:
+  - ポイントが<path>の部分にある => org-link-completion-capf-path-untyped 変数(デフォルト: org-link-completion-capf-path-untyped-default 関数)
+  - ポイントが<desc>の部分にある => org-link-completion-capf-desc-untyped 変数(デフォルト: org-link-completion-capf-desc-untyped-default 関数)
+
+- <type>が有効なリンクタイプ(org-link-parameters変数に含まれている):
+  org-link-parameters 変数に設定されている、リンクタイプ<type>の次のプロパティから関数を取得してそれを呼び出す:
+  - ポイントが<path>の部分にある => リンクタイプ<type>の :capf-path プロパティ
+  - ポイントが<desc>の部分にある => リンクタイプ<type>の :capf-desc プロパティ
+  - 上記のプロパティが無い場合 => :completino-at-point プロパティ
+    (このプロパティに設定する関数はポイントがある部位によって動作を変える必要があります)
+
+org-link-completion-at-point関数から呼び出される関数には引数は渡されません。ただし、解析した情報を org-link-completion-pos 変数にキャッシュしてから呼び出します。呼び出された関数は必要に応じてその情報を参照するか、無視して再解析することも出来ます。
+
+呼び出される関数は completion-at-point-functions に登録される関数と同じ形式を返す必要があります。詳しくはEmacs Lispマニュアルを参照してください。
+
+[[https://www.gnu.org/software/emacs/manual/html_node/elisp/Completion-in-Buffers.html][Completion in Buffers (GNU Emacs Lisp Reference Manual)]] ([[https://ayatakesi.github.io/lispref/29.2/html/Completion-in-Buffers.html][ayatakesiさんの日本語訳(29.2)]])
+
+* リンクの解析と結果の取得
+
+リンク解析は org-link-completion-parse-at-point 関数が行います。
+
+この関数は引数を取らず、ポイントがある場所の前後を調べて、ポイントがどの部位にあるかとポイントより前にある各部位の範囲を返します。
+
+#+begin_src elisp
+(WHERE TYPE-BEG TYPE-END [ PATH-BEG PATH-END [ DESC-BEG DESC-END ] ])
+;; WHERE ::= type | path | desc
+#+end_src
+
+org-link-completion-at-point関数から呼び出される関数は通常この関数を直接呼び出す必要はありません。org-link-completion-pos変数にキャッシュされた結果が格納されているのでそこから取り出すことが出来ます。ただし、キャッシュされた値がない場合に備えたコードを書くことも可能です。
+
+#+begin_src elisp
+(when-let ((pos (or org-link-completion-pos
+                    ;; キャッシュが無ければ自分で解析する
+                    (org-link-completion-parse-at-point))))
+  ;; 補完候補を返す処理
+  )
+#+end_src
+
+解析結果の各要素を取得するには、専用のアクセッサマクロを使用してください。
+
+#+begin_src elisp
+(when-let ((pos (or org-link-completion-pos
+                    (org-link-completion-parse-at-point))))
+  (let ((where (org-link-completion-pos-ref pos where)) ;;(nth 0 pos)に展開される
+        (path-beg (org-link-completion-pos-ref pos path-beg)) ;;(nth 3 pos)に展開される
+        (path-end (org-link-completion-pos-ref pos path-end))) ;;(nth 4 pos)に展開される
+    (when (eq where 'path)
+      (list
+       path-beg path-end
+       ;; ここに候補のリストを書く
+       ))))
+#+end_src
+
+これらの処理をより簡単に書くためのマクロも用意されています。次のコードは上と等価です。
+
+#+begin_src elisp
+(org-link-completion-parse-let :path (path-beg path-end)
+  (list
+   path-beg path-end
+   ;; ここに候補のリストを書く
+   ))
+#+end_src
+
+* 自分用のブログ専用リンクタイプの作成例
+
+私はブログを書くのにOrg2blogを使っているのですが、ブログのポストへのリンクを表す専用のリンクタイプを定義しています。これを使うとorg-modeファイル内で次のように書けます。
+
+#+begin_src org
+以前[[blog:2024-02-23-org-link-completion-at-point][org-modeのリンク部分でバッファ内補完する]]という記事を書きました。
+#+end_src
+
+このリンク上でC-c C-oを押すとそのorgファイルに飛びますし、エクスポートするとWeb上のURLが出力されます。C-c lによるリンクのストアにも対応していますし、C-c C-lを使ったときのパスの補完や説明部分のデフォルト値生成にも対応しています。
+
+しかしバッファ内での補完、つまりcompletion-at-pointには対応していませんでした。なので、それに対応させてみようと思います。
+
+ブログは次のようなリストで管理されています。
+
+#+begin_src elisp
+(defvar my-blog-list
+  '((:link-type "blog"
+                :post-url "https://example.com/blog/%s.html"
+                :local-dir "~/org/blog/"
+                :title "My Main Blog")
+    (:link-type "subblog"
+                :post-url "https://example.com/subblog/%s.html"
+                :local-dir "~/org/subblog/"
+                :title "My Sub Blog")))
+
+(defun my-blog-from-link-type (link-type)
+  "org-modeのリンクタイプからブログの情報を返す。"
+  (when (stringp link-type)
+    (seq-find (lambda (blog)
+                (string= (plist-get blog :link-type) link-type))
+              my-blog-list)))
+#+end_src
+
+ブログは複数あるのでmy-blog-listには複数のブログを定義できるようになっています。一つは ~blog:~ というリンクタイプを使い、もう一つは ~subblog:~ というリンクタイプを使うものとします(:link-typeプロパティ)。
+
+ブログの元ファイルはorg-modeで書かれており、パーマリンク名に拡張子(.org)を付けたファイル名で特定のディレクトリ下に全て格納されています(:local_dirプロパティ)。
+
+従って、リンクのパス部分を補完するという事は、ブログの元ファイルが格納されているディレクトリから.orgファイルを列挙し、そのファイル名から拡張子を取り除いたものを補完候補にすれば良さそうです。それを行うのが次のコードです。
+
+#+begin_src elisp
+(defun my-org-blog-link-capf-path ()
+  "ポイント上のリンクのパス部分を補完します。
+
+次のような場所でC-M-iを押したときに呼び出されることを想定しています:
+    [[blog:<permalink>(ここ)
+    [[subblog:<permalink>(ここ)"
+  (org-elisp-link-capf-parse-let :path (type path-beg path-end)
+    (let ((blog (my-blog-from-link-type type)))
+      (when blog
+        (list
+         path-beg path-end
+         (cl-loop for file in (directory-files (plist-get blog :local-dir))
+                  when (string-match "\\`\\(.+\\)\\.org\\'" file)
+                  collect (match-string 1 file))
+         :company-kind (lambda (_) 'file))))))
+#+end_src
+
+実際にこの関数をorg-link-parametersに登録すると ~blog:~ リンクタイプのパス部分でC-M-iによる補完が出来るようになります。
+
+#+begin_src elisp
+(dolist (blog my-blog-list)
+  (org-link-set-parameters (plist-get blog :link-type)
+                           :capf-path #'my-org-blog-link-capf-path))
+#+end_src
+
+次に説明部分の補完を実装します。説明部分ではどのような候補を出せば良いでしょうか。私は投稿のタイトルが補完されてほしいと思いました。ブログのタイトル付きとそうでないものの二種類に加えて元のパーマリンクも候補に出そうと思います。
+
+#+begin_src elisp
+(defun my-org-blog-link-capf-desc ()
+  "ポイント上のリンクの説明部分を補完します。
+
+次のような場所でC-M-iを押したときに呼び出されることを想定しています:
+    [[blog:<permalink>][<description>(ここ)
+    [[subblog:<permalink>][<description>(ここ)"
+  (org-elisp-link-capf-parse-let :desc (type path desc-beg desc-end)
+    (let* ((blog (my-blog-from-link-type type)))
+      (when blog
+        (let* ((title (let* ((dir (plist-get blog :local-dir))
+                             (file (expand-file-name (concat path ".org") dir)))
+                        (my-org-blog-org-file-title file))))
+          (list
+           desc-beg desc-end
+           (append
+            (when title
+              (list title
+                    (concat title " | " (plist-get blog :title))))
+            (list path))))))))
+
+(defun my-org-blog-org-file-title (file)
+  "org-modeで記述されているFILEからタイトルを取得します。"
+  (when (file-regular-p file)
+    (with-temp-buffer
+      (insert-file-contents file nil nil 16384) ;; きっと先頭の方にあるでしょう。
+      (goto-char (point-min))
+      (let ((case-fold-search t))
+        (when (re-search-forward
+               "^#\\+TITLE: *\\(.*\\)$" nil t)
+          (match-string-no-properties 1))))))
+#+end_src
+
+投稿のタイトルは.orgファイルの先頭部分にある ~#+TITLE:~ と書いてある所から抽出してみました。このコードでは行っていませんが、Emacsで開いていたらバッファから取り出すようにもした方が良いかもしれません。
+
+これも先ほどと同じようにorg-link-parametersに登録します。
+
+#+begin_src elisp
+(dolist (blog my-blog-list)
+  (org-link-set-parameters (plist-get blog :link-type)
+                           :capf-desc #'my-org-blog-link-capf-desc))
+#+end_src
+
+他の操作(:follow、:store、:export、:complete、:insert-description)は、このライブラリの趣旨から外れるので割愛します。皆さん好きなように書いてみてください。
+
+* ライセンス
+
+このソフトウェアはGPLv3の元で使用できます。このソフトウェアは自由に使用・変更・配布できます。
+
+どこかのパッケージアーカイブにこのソフトウェアを登録したい場合は、このリポジトリをフォークしてそのパッケージアーカイブに適合するように修正を加え、ご自身で登録申請をしてください。そして必要な維持作業をしてください。私の許可は必要ありません。
+
+改良版を公開するのも歓迎します。そちらの方が私のものよりも良ければ私もそれを使うようにするかもしれません。私は突然開発が出来なくなるかもしれませんし、継続的な開発は何ら保障できません。このソフトウェアは私が欲しいものを作った結果なので、皆さんが欲しいものは自ら付け足してください。
+
+私は英語がとても苦手ですので、英語での継続的なコミュニケーションは期待しないでください。
