@@ -16,7 +16,7 @@
 
 このライブラリを使用した補完関数を提供する別のライブラリとして次のものがあります。
 
-- [[https://github.com/misohena/org-elisp-link][org-elisp-link.el]] :: Emacs Lispの言語要素へのリンクタイプ ~elisp-library:~ ~elisp-function:~ ~elisp-variable:~ ~elisp-face:~ を追加します。 ~:follow~ ~:export~ ~:store~ ~:activate-func~ ~:complete~ といった標準的なプロパティの他に、本ライブラリが使う :capf-path や  :capf-desc プロパティも定義しています。
+- [[https://github.com/misohena/org-elisp-link][org-elisp-link.el]] :: Emacs Lispの言語要素へのリンクタイプ ~elisp-library:~, ~elisp-function:~, ~elisp-variable:~, ~elisp-face:~ を追加します。 ~:follow~, ~:export~, ~:store~, ~:activate-func~, ~:complete~ といった標準的なプロパティの他に、本ライブラリが使う ~:capf-path~ や  ~:capf-desc~ プロパティも定義しています。
 
 また、使用例として、私が使っているブログ投稿へのリンクを補完する関数を後ほど紹介します。
 

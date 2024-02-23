@@ -18,7 +18,7 @@ Other parts require the user to add completion functions.
 
 Another library that provides completion functions using this library is:
 
-- [[https://github.com/misohena/org-elisp-link][org-elisp-link.el]] :: Define link types that refer to definition of Emacs Lisp language elements ( ~elisp-library:~ ~elisp-function Add :~ ~elisp-variable:~ ~elisp-face:~). In addition to standard properties such as ~:follow~ ~:export~ ~:store~ ~:activate-func~ ~:complete~, this library also defines :capf-path and :capf-desc properties.
+- [[https://github.com/misohena/org-elisp-link][org-elisp-link.el]] :: Define link types that refer to definition of Emacs Lisp language elements ( ~elisp-library:~, ~elisp-function:~, ~elisp-variable:~, ~elisp-face:~). In addition to standard properties such as ~:follow~, ~:export~, ~:store~, ~:activate-func~, ~:complete~, this library also defines ~:capf-path~ and ~:capf-desc~ properties.
 
 Also, as a usage example, I'll show you a function I use later that completes links to blog posts.
 
