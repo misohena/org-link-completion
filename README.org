@@ -36,13 +36,13 @@ You can also look at the contents of the org-link-completion-setup function and 
 
 #+begin_src elisp
 (with-eval-after-load "org"
-  ;; org-modeのバッファに補完関数を追加する。
+  ;; Add a completion function to the org-mode buffer.
   (add-hook 'org-mode-hook
             (lambda ()
               (add-hook 'completion-at-point-functions
                         'org-link-completion-at-point nil t)))
 
-  ;; file: file+sys: file+desc のパス部分、説明部分の補完を追加する。
+  ;; Add completion for the path and description parts of file:, file+sys:, file+desc.
   (dolist (type '("file" "file+sys" "file+emacs"))
     (org-link-set-parameters
      type
