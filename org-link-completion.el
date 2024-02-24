@@ -539,6 +539,7 @@ For example:
           (goto-char block-end)))
       (nreverse result))))
 
+
 ;;;;;; Search Target Path
 
 (defun org-link-completion-capf-path-search ()
@@ -647,14 +648,20 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
           (push (org-link-completion-get-heading) table) ;; or nil
 
           ;; Current line text
-          ;; TODO: Remove <<...>>. Use org-target-regexp? <<<...>>>?
           (push (org-link-completion-escape-description-string
                  (string-trim
-                  (buffer-substring-no-properties (line-beginning-position)
-                                                  (line-end-position))
+                  ;; Remove <<...>> not <<<...>>>.
+                  (replace-regexp-in-string
+                   (concat "\\(?:[^<]\\|^\\)\\("
+                           org-target-regexp
+                           "\\)\\(?:[^>]\\|$\\)")
+                   ""
+                   (buffer-substring-no-properties (line-beginning-position)
+                                                   (line-end-position))
+                   nil nil 1)
                   ;; Strip bullets and table separators
-                  "[ \t\n\r]*[|-][ \t]*\\|[ \t\n\r]+\\|"
-                  "[ \t\n\r]+\\|[ \t]*|[ \t\n\r]*"))
+                  "\\(?:[ \t\n\r]*[|-]\\)*[ \t]*"
+                  "\\(?:[ \t]*|\\)*[ \t]*"))
                 table)))
       (org-link-completion-capf-result
        desc-beg desc-end
@@ -676,12 +683,15 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
           (push (org-link-completion-get-heading) table);; or nil
 
           ;; Current line text
-          ;; TODO: Remove coderef target from the line.
-          ;;       Use (org-src-coderef-regexp (org-src-coderef-format element))
           (push (org-link-completion-escape-description-string
                  (string-trim
-                  (buffer-substring-no-properties (line-beginning-position)
-                                                  (line-end-position))))
+                  ;; Remove coderef target from the line.
+                  (replace-regexp-in-string
+                   (org-src-coderef-regexp (org-src-coderef-format
+                                            (org-element-at-point)))
+                   ""
+                   (buffer-substring-no-properties (line-beginning-position)
+                                                   (line-end-position)))))
                 table)))
       ;; Target text
       (push coderef table)
