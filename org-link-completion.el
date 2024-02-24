@@ -878,20 +878,22 @@ For example:
 
 (defun org-link-completion-collect-path-from-other-links (type-beg
                                                           type-end)
-  (save-excursion
-    (let ((re (concat
-               "\\[\\["
-               (regexp-quote
-                (buffer-substring-no-properties type-beg type-end))
-               ":"
-               "\\(\\(?:[^][\\]\\|\\\\[][\\]\\|\\\\[^][\\]\\)+\\)\\][][]"))
-          table)
-      (while (re-search-forward re nil t)
-        (unless (= (+ (match-beginning 0) 2) type-beg)
-          (let ((path (match-string-no-properties 1)))
-            (unless (member path table)
-              (push path table)))))
-      table)))
+  (when (< type-beg type-end)
+    (save-excursion
+      (goto-char (point-min))
+      (let ((re (concat
+                 "\\[\\["
+                 (regexp-quote
+                  (buffer-substring-no-properties type-beg type-end))
+                 ":"
+                 "\\(\\(?:[^][\\]\\|\\\\[][\\]\\|\\\\[^][\\]\\)+\\)\\][][]"))
+            table)
+        (while (re-search-forward re nil t)
+          (unless (= (+ (match-beginning 0) 2) type-beg)
+            (let ((path (match-string-no-properties 1)))
+              (unless (member path table)
+                (push path table)))))
+        table))))
 
 
 ;;;; Complete Description from Other Links
@@ -907,15 +909,17 @@ For example:
 
 (defun org-link-completion-collect-description-from-other-links (link-beg
                                                                  link-end)
-  (save-excursion
-    (let ((re (concat "\\[\\["
-                      (regexp-quote
-                       (buffer-substring-no-properties link-beg link-end))
-                      "\\]\\["
-                      "\\(.*\\)\\]\\]")))
-      (cl-loop while (re-search-forward re nil t)
-               unless (= (+ (match-beginning 0) 2) link-beg)
-               collect (match-string-no-properties 1)))))
+  (when (< link-beg link-end)
+    (save-excursion
+      (goto-char (point-min))
+      (let ((re (concat "\\[\\["
+                        (regexp-quote
+                         (buffer-substring-no-properties link-beg link-end))
+                        "\\]\\["
+                        "\\(.*\\)\\]\\]")))
+        (cl-loop while (re-search-forward re nil t)
+                 unless (= (+ (match-beginning 0) 2) link-beg)
+                 collect (match-string-no-properties 1))))))
 
 
 ;;;; Complete File Type Link
