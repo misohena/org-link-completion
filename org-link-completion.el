@@ -288,6 +288,18 @@ of the link, do nothing. nil means to accept any part."
   :group 'org-link-completion
   :type 'function)
 
+(defcustom org-link-completion-capf-path-unknown-type
+  #'org-link-completion-capf-path-unknown-type-default
+  "Function to complete path of a link that is unknown type."
+  :group 'org-link-completion
+  :type 'function)
+
+(defcustom org-link-completion-capf-desc-unknown-type
+  #'org-link-completion-capf-desc-unknown-type-default
+  "Function to complete description of a link that is unknown type."
+  :group 'org-link-completion
+  :type 'function)
+
 ;;;###autoload
 (defun org-link-completion-at-point ()
   "Complete the path or description part of a link on point.
@@ -314,6 +326,11 @@ type.
   - `:capf-desc' : point is on <desc>
   - `:completion-at-point' : If the above properties are not present.
 
+- No completion function found for <type>:
+
+  - point is on <path> => call `org-link-completion-capf-path-unknown-type' var
+  - point is on <desc> => call `org-link-completion-capf-desc-unknown-type' var
+
 No arguments are passed to the function. However, before it is
 called, the variable `org-link-completion-pos' is set with
 information about the link to be completed.
@@ -338,16 +355,31 @@ To use this, do the following in org-mode buffer:
           ('desc (org-link-completion-call
                   org-link-completion-capf-desc-untyped))))
        (t
-        (let* ((capf-prop (if (eq where 'desc) :capf-desc :capf-path))
+        (let* ((capf-prop (pcase where
+                            ('path :capf-path)
+                            ('desc :capf-desc)))
                (capf (or (org-link-get-parameter type capf-prop)
-                         (org-link-get-parameter type :completion-at-point))))
+                         (org-link-get-parameter type :completion-at-point)
+                         (pcase where
+                           ('path org-link-completion-capf-path-unknown-type)
+                           ('desc org-link-completion-capf-desc-unknown-type)
+                           ))))
           ;;(message "capf=%s" capf)
-          (when capf
+          (when (functionp capf)
             (funcall capf))))))))
 
 (defun org-link-completion-call (fun)
   (when (functionp fun)
     (funcall fun)))
+
+
+;;;; Complete Link Unknown Type
+
+(defun org-link-completion-capf-path-unknown-type-default ()
+  (org-link-completion-capf-path-from-other-links))
+
+(defun org-link-completion-capf-desc-unknown-type-default ()
+  (org-link-completion-capf-desc-from-other-links))
 
 
 ;;;; Complete Link Type Part
@@ -390,10 +422,13 @@ To use this, do the following in org-mode buffer:
 ;;
 ;; Internal Links
 ;;  [[#custom-id       => `org-link-completion-capf-path-custom-id'
-;;  [[*heading        => `org-link-completion-capf-path-heading'
+;;   ][<description>]] => `org-link-completion-capf-desc-custom-id'
+;;  [[*heading         => `org-link-completion-capf-path-heading'
+;;   ][<description>]] => `org-link-completion-capf-desc-heading'
 ;;  [[(coderef)        => `org-link-completion-capf-path-coderef'
+;;   ][<description>]] => `org-link-completion-capf-desc-coderef'
 ;;  [[My Target"       => `org-link-completion-capf-path-search'
-;;   ][<description>]] => `org-link-completion-capf-desc-internal-link'
+;;   ][<description>]] => `org-link-completion-capf-desc-search'
 ;;
 ;; External Links
 ;;  [[./file           => `org-link-completion-capf-path-file' (same as file:)
@@ -599,18 +634,23 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 (defun org-link-completion-capf-desc-custom-id ()
   "Complete [[#custom-id][<description> at point."
-  (org-link-completion-parse-let :desc (path desc-beg desc-end)
+  (org-link-completion-parse-let :desc (path
+                                        type-beg path-end desc-beg desc-end)
     (org-link-completion-capf-result
      desc-beg desc-end
      (org-link-completion-table-keep-order
-      (delq nil (list
-                 ;; Extract from target location
-                 (save-excursion
-                   (ignore-errors
-                     (org-link-completion-link-search path)
-                     (org-link-completion-get-heading)))
-                 ;; Target text
-                 (org-link-completion-internal-target-text path))))
+      (nconc
+       ;; Used in other links
+       (org-link-completion-collect-description-from-other-links
+        type-beg path-end)
+       (delq nil (list
+                  ;; Extract from target location
+                  (save-excursion
+                    (ignore-errors
+                      (org-link-completion-link-search path)
+                      (org-link-completion-get-heading)))
+                  ;; Target text
+                  (org-link-completion-internal-target-text path)))))
      :kind 'text)))
 
 (defun org-link-completion-link-search (path)
@@ -624,19 +664,26 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 (defun org-link-completion-capf-desc-heading ()
   "Complete [[*heading][<description> at point."
-  (org-link-completion-parse-let :desc (path desc-beg desc-end)
+  (org-link-completion-parse-let :desc (path
+                                        type-beg path-end
+                                        desc-beg desc-end)
     (org-link-completion-capf-result
      desc-beg desc-end
-     (list
+     (nconc
+      ;; Used in other links
+      (org-link-completion-collect-description-from-other-links
+       type-beg path-end)
       ;; Target text
-      (org-link-completion-internal-target-text path))
+      (list (org-link-completion-internal-target-text path)))
      :kind 'text)))
 
 ;;;;;; Search Target Description
 
 (defun org-link-completion-capf-desc-search ()
   "Complete [[My Target][<description> at point."
-  (org-link-completion-parse-let :desc (path desc-beg desc-end)
+  (org-link-completion-parse-let :desc (path
+                                        type-beg path-end
+                                        desc-beg desc-end)
     (let ((table))
       ;; Target text
       (push (org-link-completion-internal-target-text path) table)
@@ -663,6 +710,12 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
                   "\\(?:[ \t\n\r]*[|-]\\)*[ \t]*"
                   "\\(?:[ \t]*|\\)*[ \t]*"))
                 table)))
+      ;; Used in other links
+      (setq table (nconc
+                   (org-link-completion-collect-description-from-other-links
+                    type-beg path-end)
+                   table))
+
       (org-link-completion-capf-result
        desc-beg desc-end
        (delq nil table)
@@ -672,7 +725,9 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 (defun org-link-completion-capf-desc-coderef ()
   "Complete [[(coderef)][<description> at point."
-  (org-link-completion-parse-let :desc (path desc-beg desc-end)
+  (org-link-completion-parse-let :desc (path
+                                        type-beg path-end
+                                        desc-beg desc-end)
     (let ((table)
           (coderef path)) ;; (<coderef>) format
       ;; Extract from target location
@@ -697,6 +752,13 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
       (push coderef table)
       ;; Line number
       (push (org-link-completion-default-coderef-description coderef) table)
+
+      ;; Used in other links
+      (setq table (nconc
+                   (org-link-completion-collect-description-from-other-links
+                    type-beg path-end)
+                   table))
+
       (org-link-completion-capf-result
        desc-beg desc-end
        (org-link-completion-table-keep-order
@@ -801,6 +863,59 @@ For example:
                     (if (functionp value) value (lambda (_) value))))
              (_
               (list key value)))))
+
+
+;;;; Complete Path from Other Links
+
+(defun org-link-completion-capf-path-from-other-links ()
+  "Complete the path at point from other links."
+  (org-link-completion-parse-let :path (type-beg type-end path-beg path-end)
+    (org-link-completion-capf-result
+     path-beg path-end
+     (org-link-completion-collect-path-from-other-links type-beg
+                                                        type-end)
+     :kind 'text)))
+
+(defun org-link-completion-collect-path-from-other-links (type-beg
+                                                          type-end)
+  (save-excursion
+    (let ((re (concat
+               "\\[\\["
+               (regexp-quote
+                (buffer-substring-no-properties type-beg type-end))
+               ":"
+               "\\(\\(?:[^][\\]\\|\\\\[][\\]\\|\\\\[^][\\]\\)+\\)\\][][]"))
+          table)
+      (while (re-search-forward re nil t)
+        (unless (= (+ (match-beginning 0) 2) type-beg)
+          (let ((path (match-string-no-properties 1)))
+            (unless (member path table)
+              (push path table)))))
+      table)))
+
+
+;;;; Complete Description from Other Links
+
+(defun org-link-completion-capf-desc-from-other-links ()
+  "Complete the description at point from other links."
+  (org-link-completion-parse-let :desc (type-beg path-end desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-collect-description-from-other-links type-beg
+                                                               path-end)
+     :kind 'text)))
+
+(defun org-link-completion-collect-description-from-other-links (link-beg
+                                                                 link-end)
+  (save-excursion
+    (let ((re (concat "\\[\\["
+                      (regexp-quote
+                       (buffer-substring-no-properties link-beg link-end))
+                      "\\]\\["
+                      "\\(.*\\)\\]\\]")))
+      (cl-loop while (re-search-forward re nil t)
+               unless (= (+ (match-beginning 0) 2) link-beg)
+               collect (match-string-no-properties 1)))))
 
 
 ;;;; Complete File Type Link

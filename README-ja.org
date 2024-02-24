@@ -86,6 +86,10 @@ org-link-completion-at-point関数は、ポイントがある場所の周辺を解析したあと、ポイ
   - 上記のプロパティが無い場合 => :completino-at-point プロパティ
     (このプロパティに設定する関数はポイントがある部位によって動作を変える必要があります)
 
+- <type>に対する補完関数が見つからない:
+  - ポイントが<path>の部分にある => org-link-completion-capf-path-unknown-type 変数(デフォルト: org-link-completion-capf-path-unknown-type-default 関数)
+  - ポイントが<desc>の部分にある => org-link-completion-capf-desc-unknown-type 変数(デフォルト: org-link-completion-capf-desc-unknown-type-default 関数)
+
 org-link-completion-at-point関数から呼び出される関数には引数は渡されません。ただし、解析した情報を org-link-completion-pos 変数にキャッシュしてから呼び出します。呼び出された関数は必要に応じてその情報を参照するか、無視して再解析することも出来ます。
 
 呼び出される関数は completion-at-point-functions に登録される関数と同じ形式を返す必要があります。詳しくはEmacs Lispマニュアルを参照してください。

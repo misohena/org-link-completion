@@ -88,6 +88,11 @@ The org-link-completion-at-point function analyzes the area around the point, an
    - If the above properties are missing => :completino-at-point property
      (The function set for this property must change its behavior depending on the part where the point is.)
 
+- No completion function found for <type>:
+
+  - point is on <path> => call `org-link-completion-capf-path-unknown-type' variable (default: org-link-completion-capf-path-unknown-type-default function)
+  - point is on <desc> => call `org-link-completion-capf-desc-unknown-type' variable (default: org-link-completion-capf-desc-unknown-type-default function)
+
 No arguments are passed to functions called from the org-link-completion-at-point function. However, it caches the parsed information in the org-link-completion-pos variable before calling it. The called function can refer to that information or ignore it and re-analyze it as needed.
 
 The called function must return the same format as the function registered with completion-at-point-functions. Please refer to the elisp manual for details.
