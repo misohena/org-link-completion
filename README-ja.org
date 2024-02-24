@@ -3,18 +3,35 @@
 
 * 概要
 
-このEmacs Lispライブラリは、org-modeのリンク表記内で completion-at-point (M-TAB、C-M-i、またはESC TAB) できるようにします。
+このEmacs Lispライブラリは、org-modeにおけるリンク表記内の各部で completion-at-point (M-TAB、C-M-i、またはESC TAB) コマンドによる補完ができるようにします。
 
-ポイントがある場所を解析し、リンク内の部位やリンクタイプに応じて適切な関数を呼び出すための拡張可能な枠組みを提供します。
+リンク内のほぼ全ての場所で補完ができます。デフォルトでは次の場所が補完可能です。
 
-デフォルトで提供している補完は次の通りです。
+- [[<link-type>:
+- [[#<custom-id>
+- [[#<custom-id>][<description>
+- [[*<heading>
+- [[*<heading>][<description>
+- [[(<coderef>)
+- [[(<coderef>)][<description>
+- [[My Target
+- [[My Target][<description>
+- [[/dir/file
+- [[./dir/file
+- [[/dir/file
+- [[c:/dir/file
+- [[/dir/file][<description> (Include / ./ / c:/)
+- [[file:<file>
+- [[file+sys:<file>
+- [[file+emacs:<file>
+- [[file:<file>][<description> (Include file+sys: file+emacs:)
+- [[<unknown-type>:<path>][<description>
 
-- リンクタイプ部分
-- ~file:~ (または ~file+sys:~ ~file+emacs:~)リンクタイプのパス部分と説明部分
+これら全ての部位で補完関数を変更・追加できるようになっています。
 
-他の部分はユーザーが補完関数を追加する必要があります。
+対応していないファイルタイプについても、自由に補完関数を追加できます。
 
-このライブラリを使用した補完関数を提供する別のライブラリとして次のものがあります。
+このライブラリを使用して補完関数を提供する別のライブラリには次のものがあります。
 
 - [[https://github.com/misohena/org-elisp-link][org-elisp-link.el]] :: Emacs Lispの言語要素へのリンクタイプ ~elisp-library:~, ~elisp-function:~, ~elisp-variable:~, ~elisp-face:~ を追加します。 ~:follow~, ~:export~, ~:store~, ~:activate-func~, ~:complete~ といった標準的なプロパティの他に、本ライブラリが使う ~:capf-path~ や  ~:capf-desc~ プロパティも定義しています。
 

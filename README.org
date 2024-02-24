@@ -5,18 +5,35 @@
 
 * Overview
 
-This Emacs Lisp library allows completion-at-point (M-TAB, C-M-i, or ESC TAB) within org-mode link notation.
+This Emacs Lisp library allows completion at various points in a link in org-mode using the completion-at-point (M-TAB, C-M-i, or ESC TAB) command.
 
-It provides an extensible framework for parsing where a point is and calling the appropriate function depending on the location within the link and the link type.
+You can complete almost anywhere within a link. By default, the following locations can be completed:
 
-The default completions are as follows.
+- [[<link-type>:
+- [[#<custom-id>
+- [[#<custom-id>][<description>
+- [[*<heading>
+- [[*<heading>][<description>
+- [[(<coderef>)
+- [[(<coderef>)][<description>
+- [[My Target
+- [[My Target][<description>
+- [[/dir/file
+- [[./dir/file
+- [[/dir/file
+- [[c:/dir/file
+- [[/dir/file][<description> (Include / ./ / c:/)
+- [[file:<file>
+- [[file+sys:<file>
+- [[file+emacs:<file>
+- [[file:<file>][<description> (Include file+sys: file+emacs:)
+- [[<unknown-type>:<path>][<description>
 
-- Link type part
-- ~file:~ (or ~file+sys:~ ~file+emacs:~) link type path and description parts
+Completion functions can be changed and added to all of these parts.
 
-Other parts require the user to add completion functions.
+You can freely add completion functions even for unsupported file types.
 
-Another library that provides completion functions using this library is:
+Another library that uses this library to provide completion functions is:
 
 - [[https://github.com/misohena/org-elisp-link][org-elisp-link.el]] :: Define link types that refer to definition of Emacs Lisp language elements ( ~elisp-library:~, ~elisp-function:~, ~elisp-variable:~, ~elisp-face:~). In addition to standard properties such as ~:follow~, ~:export~, ~:store~, ~:activate-func~, ~:complete~, this library also defines ~:capf-path~ and ~:capf-desc~ properties.
 

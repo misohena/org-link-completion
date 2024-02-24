@@ -25,8 +25,15 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'ol)
+(require 'org)
+(require 'org-element)
 
+
+(defgroup org-link-completion nil
+  "Org link completion at point."
+  :tag "Org Link Completion At Point"
+  :prefix "org-link-completion-"
+  :group 'org)
 
 ;;;; Setup
 
@@ -43,19 +50,36 @@
 
 ;;;; Parse Link At Point
 
-;; [[c:/home/
-;; [[#my-custom-id]
 ;; [[My Target]
+;; [[*heading]
+;; [[#my-custom-id]
+;; [[file:test.org
+;; [[file:/dir/file]
+;; [[file:README.org::library]
+;; [[file:README.org::*Setup]
+;; [[file:README.org::#custom-id]
 ;; [[/dir/file]
 ;; [[./dir/file]
-;; [[*Heading]
-;; [[file:/dir/file::My Target]
-;; [[file:test.org
+;; [[~/.emacs.d/]
+;; [[c:/home/
 ;; [[type:<path>]
+;; [[\[<type>:<path>\]][escape sequence
+;; [[^#\\\\+TITLE][escape sequence
+;; [[My Target][description[multiple[bracket]bracket]bracket]]
+;; [[(jump)   (See: https://orgmode.org/manual/Literal-Examples.html)
+;; [[(jump)][Line (jump)
 ;; [[    ][
 ;; [[    ][  ]]
 ;; [[    ][  ][   ][   ]]
 ;; [[type:path][foofoofoo[[foofofofof[[fofof]] <= Unable to parse correctly
+;; [[My
+;; Target]] <= Not supported
+;;
+;; Invalid Syntax:
+;; [[My Target\][description]]
+;; [[My [Target][description]]
+;; [[My ]Target][description]]
+
 
 (defconst org-link-completion-type-chars "-A-Za-z0-9_+")
 
@@ -137,7 +161,7 @@
          ((<= origin path-end) (list 'path type-beg type-end path-beg path-end))
          ;; [[<type>:<path>]
          ((null desc-beg) nil)
-         ;; Reject invalid [[path\][desc
+         ;; Reject invalid syntax [[path\][desc , [[pa[th][desc, [[pa]th][desc
          ((/= (- desc-beg 2) path-end) nil)
          ;; [[<type>:<path>][
          (t
@@ -245,14 +269,24 @@ of the link, do nothing. nil means to accept any part."
 
 ;;;; Completion At Point Function
 
-(defvar org-link-completion-capf-type
-  #'org-link-completion-capf-type-default)
+(defcustom org-link-completion-capf-type
+  #'org-link-completion-capf-type-default
+  "Function to complete link type part."
+  :group 'org-link-completion
+  :type 'function)
 
-(defvar org-link-completion-capf-path-untyped
-  #'org-link-completion-capf-path-untyped-default)
+(defcustom org-link-completion-capf-path-untyped
+  #'org-link-completion-capf-path-untyped-default
+  "Function to complete path of a link that does not have type specification."
+  :group 'org-link-completion
+  :type 'function)
 
-(defvar org-link-completion-capf-desc-untyped
-  #'org-link-completion-capf-desc-untyped-default)
+(defcustom org-link-completion-capf-desc-untyped
+  #'org-link-completion-capf-desc-untyped-default
+  "Function to complete description of a link that does not have
+ type specification."
+  :group 'org-link-completion
+  :type 'function)
 
 ;;;###autoload
 (defun org-link-completion-at-point ()
@@ -278,7 +312,7 @@ type.
 
   - `:capf-path' : point is on <path>
   - `:capf-desc' : point is on <desc>
-  - `:completino-at-point' : If the above properties are not present.
+  - `:completion-at-point' : If the above properties are not present.
 
 No arguments are passed to the function. However, before it is
 called, the variable `org-link-completion-pos' is set with
@@ -319,33 +353,444 @@ To use this, do the following in org-mode buffer:
 ;;;; Complete Link Type Part
 
 (defun org-link-completion-capf-type-default ()
-  ;; <type>:
-  ;; TODO: If <type> is a target link.
+  "Comlete [[#<type>: part of link at point."
   (org-link-completion-parse-let :type (type-beg type-end)
-    (list
+    (org-link-completion-capf-result
      type-beg
      (if (eq (char-after type-end) ?:) (1+ type-end) type-end)
-     (mapcar (lambda (e) (concat (car e) ":"))
-             (append org-link-abbrev-alist-local
-                     org-link-abbrev-alist
-                     org-link-parameters)))))
+     (org-link-completion-table-keep-order
+      (org-link-completion-collect-type-part-candidates))
+     :annotation-function
+     (lambda (str)
+       (pcase (elt str 0)
+         (?# "CUSTOM_ID")
+         (?* "Heading")
+         (?\( "Coderef"))))))
+
+(defun org-link-completion-collect-type-part-candidates ()
+  (append
+   '("*" "#" "(")
+   (org-link-completion-collect-types)
+   ;; Consider the possibility that <type> is <target>.
+   ;; For example: [[mytarget .
+   (org-link-completion-collect-search-target)))
+
+(defun org-link-completion-collect-types ()
+  (mapcar (lambda (e) (concat (car e) ":"))
+          (append org-link-abbrev-alist-local
+                  org-link-abbrev-alist
+                  org-link-parameters)))
+
 
 ;;;; Complete Untyped Link
 
+;; Complete links without <type>: specification.
+
+;; `org-link-completion-capf-path-untyped-default'
+;;
+;; Internal Links
+;;  [[#custom-id       => `org-link-completion-capf-path-custom-id'
+;;  [[*heading        => `org-link-completion-capf-path-heading'
+;;  [[(coderef)        => `org-link-completion-capf-path-coderef'
+;;  [[My Target"       => `org-link-completion-capf-path-search'
+;;   ][<description>]] => `org-link-completion-capf-desc-internal-link'
+;;
+;; External Links
+;;  [[./file           => `org-link-completion-capf-path-file' (same as file:)
+;;   ][<description>]] => `org-link-completion-capf-desc-file' (same as file:)
+
+(defun org-link-completion-untyped-link-kind (beg end)
+  (when (< beg end)
+    (pcase (char-after beg)
+      ;; #<custom id>
+      (?# 'custom-id)
+      ;; *<heading>
+      (?* 'heading)
+      ;; (<coderef>)
+      (?\( 'coderef)
+      ;; <file>
+      ((or ?/ ?. ?~
+           ;; Drive letter (c:)
+           (pred (lambda (ch)
+                   (and (or (<= ?a ch ?z) (<= ?A ch ?Z))
+                        (eq (char-after (1+ beg)) ?:)))))
+       'file)
+      ;; <target>
+      (_
+       'search))))
+
+;;;;; Untyped Path
+
+(defcustom org-link-completion-capf-path-untyped-functions
+  '((custom-id . org-link-completion-capf-path-custom-id)
+    (heading . org-link-completion-capf-path-heading)
+    (coderef . org-link-completion-capf-path-coderef)
+    (search . org-link-completion-capf-path-search)
+    (file . org-link-completion-capf-path-file))
+  "Alist of functions to complete path for each kind of untyped link."
+  :group 'org-link-completion
+  :type 'alist)
+
 (defun org-link-completion-capf-path-untyped-default ()
-  ;; #<custom id>
-  ;; *<heading>
-  ;; <target>
-  ;; <file>
-  )
+  "Complete <path> of link that does not have <type>: at point.
+
+For example:
+  [[#custom-id
+  [[*heading
+  [[(coderef)
+  [[My Target
+  [[./file"
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (org-link-completion-capf-path-call-on-kind
+     path-beg path-end
+     org-link-completion-capf-path-untyped-functions)))
+
+(defun org-link-completion-capf-path-call-on-kind (path-beg path-end alist)
+  (let ((fun (alist-get
+              (org-link-completion-untyped-link-kind path-beg path-end)
+              alist)))
+    (when (functionp fun)
+      (funcall fun))))
+
+;;;;;; Custom-ID Path
+
+(defun org-link-completion-capf-path-custom-id ()
+  "Comlete [[#<custom-id> part of link at point."
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (org-link-completion-capf-result
+     (1+ path-beg) path-end
+     (org-link-completion-table-keep-order
+      (org-link-completion-collect-custom-id))
+     :kind 'keyword)))
+
+(defun org-link-completion-collect-custom-id ()
+  "Collect all :CUSTOM_ID: property values from the current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    ;; See: `org-find-property'
+    (let ((case-fold-search t)
+          (re (org-re-property "CUSTOM_ID" nil nil nil)))
+      (cl-loop while (re-search-forward re nil t)
+               for id = (org-entry-get (point) "CUSTOM_ID" nil t)
+               when id
+               collect id))))
+
+;;;;;; Heading Path
+
+(defun org-link-completion-capf-path-heading ()
+  "Comlete [[*<heading> part of link at point."
+  ;; NOTE: There is already an implementation in
+  ;; `pcomplete/org-mode/searchhead'
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (org-link-completion-capf-result
+     (1+ path-beg) path-end
+     (org-link-completion-table-keep-order
+      (org-link-completion-collect-heading))
+     :kind 'folder)))
+
+(defun org-link-completion-collect-heading ()
+  "Collect all heading text from the current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (cl-loop while (re-search-forward org-outline-regexp nil t)
+             for heading = (ignore-errors
+                              (org-link--normalize-string
+                               (substring-no-properties
+                                ;; or nil
+                                (org-get-heading t t t t))))
+             when heading
+             collect heading)))
+
+;;;;;; Coderef Path
+
+(defun org-link-completion-capf-path-coderef ()
+  "Comlete [[(<coderef>) part of link at point."
+  ;; NOTE: There is already an implementation in
+  ;; `pcomplete/org-mode/searchhead'
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (org-link-completion-capf-result
+     (1+ path-beg) path-end
+     (org-link-completion-table-keep-order
+      (org-link-completion-collect-coderef))
+     :kind 'reference)))
+
+(defun org-link-completion-collect-coderef ()
+  "Collect all coderef labels (ref:<label>) from the current buffer."
+  ;; Ref: `org-link-search'
+  (save-excursion
+    (goto-char (point-min))
+    (let (result)
+      ;; For each code block
+      (while (re-search-forward org-babel-src-block-regexp nil t)
+        (goto-char (match-beginning 0))
+        (let ((block-beg (match-beginning 0))
+              (block-end (match-end 0))
+              (element (org-element-at-point))) ;;NOTE: Change match-data
+          (when (and (memq (org-element-type element)
+                           '(src-block example-block))
+                     (<= block-beg
+                         (org-element-property :post-affiliated element)))
+            ;; For each coderef
+            (let ((re-coderef (concat ".*?"
+                                      (org-src-coderef-regexp
+                                       (org-src-coderef-format element)))))
+              (while (re-search-forward re-coderef block-end t)
+                (push (match-string-no-properties 3) result))))
+          (goto-char block-end)))
+      (nreverse result))))
+
+;;;;;; Search Target Path
+
+(defun org-link-completion-capf-path-search ()
+  "Comlete `[[My Target' part of link at point.
+
+NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (org-link-completion-capf-result
+     path-beg path-end
+     (org-link-completion-table-keep-order
+      (org-link-completion-collect-search-target))
+     :kind 'text)))
+
+(defun org-link-completion-collect-search-target ()
+  "Collect all search target strings from the current buffer."
+  ;; Ignore headings, all words.
+  (nconc
+   (org-link-completion-collect-dedicated-target)
+   (org-link-complete-collect-element-names)))
+
+(defun org-link-completion-collect-dedicated-target ()
+  "Collect all dedicated target (<<target>>) from the current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (cl-loop while (re-search-forward org-target-regexp nil t)
+             for target = (match-string 1)
+             when target
+             collect target)))
+
+(defun org-link-complete-collect-element-names ()
+  "Collect all element names (#+NAME:) from the current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (cl-loop while (re-search-forward "^[ \t]*#\\+NAME:[ \t]*\\(.*?\\)[ \t]*$"
+                                      nil t)
+             collect (match-string-no-properties 1))))
+
+;;;;; Untyped Description
+
+(defcustom org-link-completion-capf-desc-untyped-functions
+  '((custom-id . org-link-completion-capf-desc-custom-id)
+    (heading . org-link-completion-capf-desc-heading)
+    (coderef . org-link-completion-capf-desc-coderef)
+    (search . org-link-completion-capf-desc-search)
+    (file . org-link-completion-capf-desc-file))
+  "Alist of functions to complete description for each kind of untyped link."
+  :group 'org-link-completion
+  :type 'alist)
 
 (defun org-link-completion-capf-desc-untyped-default ()
-  ;; path is:
-  ;; #<custom id>
-  ;; *<heading>
-  ;; <target>
-  ;; <file>
-  )
+  (org-link-completion-parse-let :desc (path-beg path-end)
+    (org-link-completion-capf-path-call-on-kind
+     path-beg path-end
+     org-link-completion-capf-desc-untyped-functions)))
+
+;;;;;; Custom-ID Description
+
+(defun org-link-completion-capf-desc-custom-id ()
+  "Complete [[#custom-id][<description> at point."
+  (org-link-completion-parse-let :desc (path desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-table-keep-order
+      (delq nil (list
+                 ;; Extract from target location
+                 (save-excursion
+                   (ignore-errors
+                     (org-link-completion-link-search path)
+                     (org-link-completion-get-heading)))
+                 ;; Target text
+                 (org-link-completion-internal-target-text path))))
+     :kind 'text)))
+
+(defun org-link-completion-link-search (path)
+  (if (eq org-link-search-must-match-exact-headline 'query-to-create)
+      ;; Suppress questions to users.
+      (let ((org-link-search-must-match-exact-headline nil))
+        (org-link-search path nil t))
+    (org-link-search path nil t)))
+
+;;;;;; Heading Description
+
+(defun org-link-completion-capf-desc-heading ()
+  "Complete [[*heading][<description> at point."
+  (org-link-completion-parse-let :desc (path desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (list
+      ;; Target text
+      (org-link-completion-internal-target-text path))
+     :kind 'text)))
+
+;;;;;; Search Target Description
+
+(defun org-link-completion-capf-desc-search ()
+  "Complete [[My Target][<description> at point."
+  (org-link-completion-parse-let :desc (path desc-beg desc-end)
+    (let ((table))
+      ;; Target text
+      (push (org-link-completion-internal-target-text path) table)
+      ;; Extract from target location
+      (save-excursion
+        (ignore-errors
+          (org-link-completion-link-search path)
+          ;; Heading
+          (push (org-link-completion-get-heading) table) ;; or nil
+
+          ;; Current line text
+          ;; TODO: Remove <<...>>. Use org-target-regexp? <<<...>>>?
+          (push (org-link-completion-escape-description-string
+                 (string-trim
+                  (buffer-substring-no-properties (line-beginning-position)
+                                                  (line-end-position))
+                  ;; Strip bullets and table separators
+                  "[ \t\n\r]*[|-][ \t]*\\|[ \t\n\r]+\\|"
+                  "[ \t\n\r]+\\|[ \t]*|[ \t\n\r]*"))
+                table)))
+      (org-link-completion-capf-result
+       desc-beg desc-end
+       (delq nil table)
+       :kind 'text))))
+
+;;;;;; Coderef Description
+
+(defun org-link-completion-capf-desc-coderef ()
+  "Complete [[(coderef)][<description> at point."
+  (org-link-completion-parse-let :desc (path desc-beg desc-end)
+    (let ((table)
+          (coderef path)) ;; (<coderef>) format
+      ;; Extract from target location
+      (save-excursion
+        (ignore-errors
+          (org-link-completion-link-search path)
+          ;; Heading
+          (push (org-link-completion-get-heading) table);; or nil
+
+          ;; Current line text
+          ;; TODO: Remove coderef target from the line.
+          ;;       Use (org-src-coderef-regexp (org-src-coderef-format element))
+          (push (org-link-completion-escape-description-string
+                 (string-trim
+                  (buffer-substring-no-properties (line-beginning-position)
+                                                  (line-end-position))))
+                table)))
+      ;; Target text
+      (push coderef table)
+      ;; Line number
+      (push (org-link-completion-default-coderef-description coderef) table)
+      (org-link-completion-capf-result
+       desc-beg desc-end
+       (org-link-completion-table-keep-order
+        (delq nil table))
+       :kind 'text))))
+
+(defconst org-link-completion-default-coderef-description-format-dictionary
+  '(("Japanese" . "%s行目")))
+
+(defcustom org-link-completion-default-coderef-description-format
+  (alist-get
+   ;; Should I use `org-export-default-language'? (Is it loaded at this point?)
+   current-language-environment
+   org-link-completion-default-coderef-description-format-dictionary
+   "Line %s"
+   nil #'equal)
+  "Default description format for coderef links."
+  :group 'org-link-completion
+  :type 'string)
+
+(defun org-link-completion-default-coderef-description (label)
+  (format org-link-completion-default-coderef-description-format label))
+
+
+(defun org-link-completion-internal-target-text (path)
+  "Strip prefix and suffix (if any) at the beginning or end of internal links.
+
+For example:
+  \"#custom-id\" => \"custom-id\"
+  \"*heading\" => \"heading\"
+  \"(coderef)\" => \"coderef\""
+  (let ((path-len (length path)))
+    (or
+     ;; #custom-id or *heading
+     (and (>= path-len 1)
+          (memq (elt path 0) '(?# ?*))
+          (substring path 1))
+     ;; (coderef)
+     (and (>= path-len 2)
+          (eq (elt path 0) ?\()
+          (eq (elt path (1- path-len)) ?\))
+          (substring path 1 -1))
+     path)))
+
+(defun org-link-completion-get-heading ()
+  (when-let ((heading (org-get-heading t t t t)))
+    (substring-no-properties heading)))
+
+
+(defconst org-link-completion-escape-description-separator
+  ;; export snippets hack or zero width space
+  ;;(string ?\x200B)
+  "@@-:@@")
+
+(defun org-link-completion-escape-description-string (str)
+  "Replace \"]]\" to \"]?]\"."
+  ;; Ref: `org-link-make-string' (have a bug)
+  (let ((last 0)
+        curr
+        (result ""))
+    (while (setq curr (string-match "]\\(]\\|\\'\\)" str last))
+      (setq result (concat result
+                           (substring str last curr)
+                           "]"
+                           org-link-completion-escape-description-separator)
+            last (1+ curr)))
+    (setq result (concat result (substring str last)))
+    result))
+
+
+;;;; Utilities for completion
+
+;;;;; Completion Table
+
+(defun org-link-completion-table-with-metadata (table metadata-alist)
+  (when table
+    (lambda (string predicate action)
+      (cond
+       ((eq action 'metadata) (cons 'metadata metadata-alist))
+       (t (complete-with-action action table string predicate))))))
+
+(defun org-link-completion-table-keep-order (table)
+  (when table
+    (org-link-completion-table-with-metadata
+     table
+     '((display-sort-function . identity)))))
+
+;;;;; Return value of completion-at-point-functions
+
+(defun org-link-completion-capf-result (beg end table &rest plist)
+  (when table
+    (nconc (list beg end table)
+           (org-link-completion-capf-result-convert-properties plist))))
+
+(defun org-link-completion-capf-result-convert-properties (plist)
+  (cl-loop for (key value) on plist by #'cddr
+           nconc
+           (pcase key
+             ;; :kind <symbol>|<function>
+             (:kind
+              (list :company-kind
+                    (if (functionp value) value (lambda (_) value))))
+             (_
+              (list key value)))))
 
 
 ;;;; Complete File Type Link
