@@ -63,8 +63,8 @@ You can also look at the contents of the org-link-completion-setup function and 
   (dolist (type '("file" "file+sys" "file+emacs"))
     (org-link-set-parameters
      type
-     :capf-path 'org-link-completion-capf-path-file
-     :capf-desc 'org-link-completion-capf-desc-file)))
+     :capf-path 'org-link-completion-path-file
+     :capf-desc 'org-link-completion-desc-file)))
 #+end_src
 
 * Functions called by org-link-completion-at-point function
@@ -75,11 +75,11 @@ In this library, each part of the link is classified as follows.
 
 The org-link-completion-at-point function analyzes the area around the point, and then calls the following function depending on where the point is in the link and what the link type (<type>) is. Decide as follows.
 
-- Point is in <type> => org-link-completion-capf-type variable (default: org-link-completion-capf-type-default function)
+- Point is in <type> => org-link-completion-type variable (default: org-link-completion-type-default function)
 
 - <type> is empty:
-   - Point is in <path> => org-link-completion-capf-path-untyped variable (default: org-link-completion-capf-path-untyped-default function)
-   - Point is in <desc> => org-link-completion-capf-desc-untyped variable (default: org-link-completion-capf-desc-untyped-default function)
+   - Point is in <path> => org-link-completion-path-untyped variable (default: org-link-completion-path-untyped-default function)
+   - Point is in <desc> => org-link-completion-desc-untyped variable (default: org-link-completion-desc-untyped-default function)
 
 - <type> is a valid link type (contained in the org-link-parameters variable):
    Get the function from the following properties of link type <type> set in the org-link-parameters variable and call it:
@@ -90,8 +90,8 @@ The org-link-completion-at-point function analyzes the area around the point, an
 
 - No completion function found for <type>:
 
-  - point is on <path> => call `org-link-completion-capf-path-unknown-type' variable (default: org-link-completion-capf-path-unknown-type-default function)
-  - point is on <desc> => call `org-link-completion-capf-desc-unknown-type' variable (default: org-link-completion-capf-desc-unknown-type-default function)
+  - point is on <path> => call `org-link-completion-path-unknown-type' variable (default: org-link-completion-path-unknown-type-default function)
+  - point is on <desc> => call `org-link-completion-desc-unknown-type' variable (default: org-link-completion-desc-unknown-type-default function)
 
 No arguments are passed to functions called from the org-link-completion-at-point function. However, it caches the parsed information in the org-link-completion-pos variable before calling it. The called function can refer to that information or ignore it and re-analyze it as needed.
 
