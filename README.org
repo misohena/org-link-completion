@@ -9,8 +9,8 @@ This Emacs Lisp library allows completion at various points in a link in org-mod
 
 You can complete almost anywhere within a link. By default, the following locations can be completed:
 
-- [[ /*link-type*/ :
-- [[ /*searchtarget*/
+- [[ */link-type/* :
+- [[ */searchtarget/*
 - [[# */custom-id/*
 - [[# /custom-id/ ][ */description/*
 - [[* */heading/*
