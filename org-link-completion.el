@@ -390,7 +390,7 @@ part of link."
   :type '(repeat (function)))
 
 (defun org-link-completion-type ()
-  "Comlete [[#<type>: part of link at point."
+  "Complete [[#<type>: part of link at point."
   (org-link-completion-parse-let :type (type-beg type-end)
     (org-link-completion-capf-result
      type-beg
@@ -493,7 +493,7 @@ CUSTOM-ID format."
   :type '(repeat (function)))
 
 (defun org-link-completion-path-custom-id ()
-  "Comlete [[#<custom-id> part of link at point."
+  "Complete [[#<custom-id> part of link at point."
   (org-link-completion-parse-let :path (path-beg path-end)
     (org-link-completion-capf-result
      (1+ path-beg) path-end
@@ -524,7 +524,7 @@ heading format."
   :type '(repeat (function)))
 
 (defun org-link-completion-path-heading ()
-  "Comlete [[*<heading> part of link at point."
+  "Complete [[*<heading> part of link at point."
   ;; NOTE: There is already an implementation in
   ;; `pcomplete/org-mode/searchhead'
   (org-link-completion-parse-let :path (path-beg path-end)
@@ -558,7 +558,7 @@ coderef format."
   :type '(repeat (function)))
 
 (defun org-link-completion-path-coderef ()
-  "Comlete [[(<coderef>) part of link at point."
+  "Complete [[(<coderef>) part of link at point."
   ;; NOTE: There is already an implementation in
   ;; `pcomplete/org-mode/searchhead'
   (org-link-completion-parse-let :path (path-beg path-end)
@@ -614,7 +614,7 @@ search target format."
   :type '(repeat (function)))
 
 (defun org-link-completion-path-search ()
-  "Comlete `[[My Target' part of link at point.
+  "Complete `[[My Target' part of link at point.
 
 NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
   (org-link-completion-parse-let :path (path-beg path-end)
