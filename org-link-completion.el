@@ -35,6 +35,12 @@
   :prefix "org-link-completion-"
   :group 'org)
 
+(defgroup org-link-completion-functions nil
+  "Completion at point functions for Org link."
+  :tag "Completion Functions"
+  :prefix "org-link-completion-"
+  :group 'org-link-completion)
+
 ;;;; Setup
 
 ;;;###autoload
@@ -274,32 +280,32 @@ of the link, do nothing. nil means to accept any part."
 (defcustom org-link-completion-type-function
   #'org-link-completion-type
   "Function to complete link type part."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type 'function)
 
 (defcustom org-link-completion-path-untyped-function
   #'org-link-completion-path-untyped
   "Function to complete path of a link that does not have type specification."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type 'function)
 
 (defcustom org-link-completion-desc-untyped-function
   #'org-link-completion-desc-untyped
   "Function to complete description of a link that does not have
  type specification."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type 'function)
 
 (defcustom org-link-completion-path-unknown-type-function
   #'org-link-completion-path-unknown-type
   "Function to complete path of a link that is unknown type."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type 'function)
 
 (defcustom org-link-completion-desc-unknown-type-function
   #'org-link-completion-desc-unknown-type
   "Function to complete description of a link that is unknown type."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type 'function)
 
 ;;;###autoload
@@ -380,7 +386,7 @@ To use this, do the following in org-mode buffer:
     org-link-completion-collect-search-target)
   "List of functions that collect completion candidates for first
 part of link."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 (defun org-link-completion-type ()
@@ -455,7 +461,7 @@ part of link."
     (search . org-link-completion-path-search)
     (file . org-link-completion-path-file))
   "Alist of functions to complete path for each kind of untyped link."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type 'alist)
 
 (defun org-link-completion-path-untyped ()
@@ -483,7 +489,7 @@ For example:
   '(org-link-completion-collect-custom-id)
   "List of functions that collect path completion candidates in
 CUSTOM-ID format."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 (defun org-link-completion-path-custom-id ()
@@ -514,7 +520,7 @@ CUSTOM-ID format."
   '(org-link-completion-collect-heading)
   "List of functions that collect path completion candidates in
 heading format."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 (defun org-link-completion-path-heading ()
@@ -548,7 +554,7 @@ heading format."
   '(org-link-completion-collect-coderef)
   "List of functions that collect path completion candidates in
 coderef format."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 (defun org-link-completion-path-coderef ()
@@ -604,7 +610,7 @@ coderef format."
     org-link-complete-collect-element-names)
   "List of functions that collect path completion candidates in
 search target format."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 (defun org-link-completion-path-search ()
@@ -653,7 +659,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
     (search . org-link-completion-desc-search)
     (file . org-link-completion-desc-file))
   "Alist of functions to complete description for each kind of untyped link."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type 'alist)
 
 (defun org-link-completion-desc-untyped ()
@@ -670,7 +676,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
     org-link-completion-collect-stripped-internal-link-path)
   "List of functions that collect description completion candidates
 in custom-id format."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 (defun org-link-completion-desc-custom-id ()
@@ -699,7 +705,7 @@ in custom-id format."
     org-link-completion-collect-stripped-internal-link-path)
   "List of functions that collect description completion candidates
 in heading format."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 (defun org-link-completion-desc-heading ()
@@ -720,7 +726,7 @@ in heading format."
     org-link-completion-collect-stripped-internal-link-path)
   "List of functions that collect description completion candidates
 in search target format."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 (defun org-link-completion-desc-search ()
@@ -778,7 +784,7 @@ in search target format."
     org-link-completion-collect-coderef-desc-from-around-target)
   "List of functions that collect description completion candidates
 in coderef format."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 (defun org-link-completion-desc-coderef ()
@@ -969,7 +975,7 @@ To enable this, call `org-lnk-completion-setup-type-file' function."
   "List of completion functions to disable.
 
 Affects calls with `org-link-completion-call'."
-  :group 'org-link-completion
+  :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 (defun org-link-completion-call (fun &rest args)

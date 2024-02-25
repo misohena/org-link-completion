@@ -106,3 +106,6 @@ CLOSED: [2024-02-25 Sun 13:37]
 CLOSED: [2024-02-25 Sun 23:26]
 org-element-typeはexample-blockを受け入れてもorg-babel-src-block-regexpを使っているのだから当然。でもexample-blockを検索する正規表現そのものは見当たらない。org-fontify-meta-lines-and-blocks-1のやり方はちょっと面倒だしなぁ。
 org-babel-src-block-regexpの_srcを_exampleに置換したらダメ？→とりあえずそうした。
+** DONE カスタマイズグループが補完関数だらけで見づらいので何とかする
+CLOSED: [2024-02-25 Sun 23:38]
+補完関数だけを入れたサブグループを作る。
