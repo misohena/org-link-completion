@@ -837,61 +837,6 @@ in coderef format."
   (format org-link-completion-default-coderef-description-format label))
 
 
-(defun org-link-completion-strip-internal-link (path)
-  "Strip prefix and suffix (if any) at the beginning or end of internal links.
-
-For example:
-  \"#custom-id\" => \"custom-id\"
-  \"*heading\" => \"heading\"
-  \"(coderef)\" => \"coderef\""
-  (let ((path-len (length path)))
-    (or
-     ;; #custom-id or *heading
-     (and (>= path-len 1)
-          (memq (elt path 0) '(?# ?*))
-          (substring path 1))
-     ;; (coderef)
-     (and (>= path-len 2)
-          (eq (elt path 0) ?\()
-          (eq (elt path (1- path-len)) ?\))
-          (substring path 1 -1))
-     path)))
-
-(defun org-link-completion-get-heading ()
-  (when-let ((heading (org-get-heading t t t t)))
-    (substring-no-properties heading)))
-
-
-(defconst org-link-completion-escape-description-separator
-  ;; export snippets hack or zero width space
-  ;;(string ?\x200B)
-  "@@-:@@")
-
-(defun org-link-completion-escape-description-string (str)
-  "Replace \"]]\" to \"]?]\"."
-  ;; Ref: `org-link-make-string' (have a bug)
-  (let ((last 0)
-        curr
-        (result ""))
-    (while (setq curr (string-match "]\\(]\\|\\'\\)" str last))
-      (setq result (concat result
-                           (substring str last curr)
-                           "]"
-                           org-link-completion-escape-description-separator)
-            last (1+ curr)))
-    (setq result (concat result (substring str last)))
-    result))
-
-(defun org-link-completion-link-search (path)
-  (ignore-errors
-    (if (eq org-link-search-must-match-exact-headline 'query-to-create)
-        ;; Suppress questions to users.
-        (let ((org-link-search-must-match-exact-headline nil))
-          (org-link-search path nil t))
-      (org-link-search path nil t))
-    t))
-
-
 ;;;; Utilities for completion
 
 ;;;;; Completion Table
@@ -957,6 +902,62 @@ For example:
 
 (defun org-link-completion-annotation (str)
   (get-text-property 0 :org-link-completion-annotation str))
+
+;;;;; Uncategorized
+
+(defun org-link-completion-strip-internal-link (path)
+  "Strip prefix and suffix (if any) at the beginning or end of internal links.
+
+For example:
+  \"#custom-id\" => \"custom-id\"
+  \"*heading\" => \"heading\"
+  \"(coderef)\" => \"coderef\""
+  (let ((path-len (length path)))
+    (or
+     ;; #custom-id or *heading
+     (and (>= path-len 1)
+          (memq (elt path 0) '(?# ?*))
+          (substring path 1))
+     ;; (coderef)
+     (and (>= path-len 2)
+          (eq (elt path 0) ?\()
+          (eq (elt path (1- path-len)) ?\))
+          (substring path 1 -1))
+     path)))
+
+(defun org-link-completion-get-heading ()
+  (when-let ((heading (org-get-heading t t t t)))
+    (substring-no-properties heading)))
+
+
+(defconst org-link-completion-escape-description-separator
+  ;; export snippets hack or zero width space
+  ;;(string ?\x200B)
+  "@@-:@@")
+
+(defun org-link-completion-escape-description-string (str)
+  "Replace \"]]\" to \"]?]\"."
+  ;; Ref: `org-link-make-string' (have a bug)
+  (let ((last 0)
+        curr
+        (result ""))
+    (while (setq curr (string-match "]\\(]\\|\\'\\)" str last))
+      (setq result (concat result
+                           (substring str last curr)
+                           "]"
+                           org-link-completion-escape-description-separator)
+            last (1+ curr)))
+    (setq result (concat result (substring str last)))
+    result))
+
+(defun org-link-completion-link-search (path)
+  (ignore-errors
+    (if (eq org-link-search-must-match-exact-headline 'query-to-create)
+        ;; Suppress questions to users.
+        (let ((org-link-search-must-match-exact-headline nil))
+          (org-link-search path nil t))
+      (org-link-search path nil t))
+    t))
 
 
 ;;;; Complete Path from Other Links
