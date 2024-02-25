@@ -85,7 +85,7 @@
 
 (defun org-link-completion-parse-at-point ()
   "Return a list in the following format:
-(WHERE TYPE-BEG TYPE-END [ PATH-BEG PATH-END [ DESC-BEG DESC-END ] ])"
+  (WHERE TYPE-BEG TYPE-END [ PATH-BEG PATH-END [ DESC-BEG DESC-END ] ])"
   (save-excursion
     (let ((origin (point))
           type-beg type-end type-sep
@@ -339,8 +339,8 @@ The function must return the same format as functions added to
 `completion-at-point-functions'.
 
 To use this, do the following in org-mode buffer:
-(add-hook \\='completion-at-point-functions
-          #\\='org-link-completion-at-point nil t)"
+  (add-hook \\='completion-at-point-functions
+            #\\='org-link-completion-at-point nil t)"
   (when-let ((pos (org-link-completion-parse-at-point)))
     (let* ((org-link-completion-pos pos)
            (where (org-link-completion-pos-ref pos where))
