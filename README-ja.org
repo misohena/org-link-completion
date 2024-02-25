@@ -7,26 +7,27 @@
 
 リンク内のほぼ全ての場所で補完ができます。デフォルトでは次の場所が補完可能です。
 
-- [[<link-type>:
-- [[<searchtarget>
-- [[#<custom-id>
-- [[#<custom-id>][<description>
-- [[*<heading>
-- [[*<heading>][<description>
-- [[(<coderef>)
-- [[(<coderef>)][<description>
-- [[Search Target
-- [[Search Target][<description>
-- [[/dir/file
-- [[./dir/file
-- [[/dir/file
-- [[c:/dir/file
-- [[/dir/file][<description> (Include / ./ / c:/)
-- [[file:<file>
-- [[file+sys:<file>
-- [[file+emacs:<file>
-- [[file:<file>][<description> (Include file+sys: file+emacs:)
-- [[<unknown-type>:<path>][<description>
+- [[ */link-type/* :
+- [[ */searchtarget/*
+- [[# */custom-id/*
+- [[# /custom-id/ ][ */description/*
+- [[* */heading/*
+- [[* /heading/ ][ */description/*
+- [[( */coderef/* )
+- [[( /coderef/ )][ */description/*
+- [[ *Search Target*
+- [[ Search Target ][ */description/*
+- [[ */dir/file*
+- [[ *./dir/file*
+- [[ */dir/file*
+- [[ *c:/dir/file*
+- [[/dir/file][ */description/*  (上述の / ./ / c:/ を含む)
+- [[file: */file/*
+- [[file+sys: */file/*
+- [[file+emacs: */file/*
+- [[file: /file/ ][ */description/*  (上述の file+sys: file+emacs: を含む)
+- [[ /unknown-type/ : */path/*
+- [[ /unknown-type/ : /path/ ][ */description/*
 
 補完候補はリンク先やその周辺、他の同種のリンク、構文上の制約、リンクのパス部分(説明部分を補完するとき)等から収集します。
 
