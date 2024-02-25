@@ -635,7 +635,9 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
   (save-excursion
     (goto-char (point-min))
     (cl-loop while (re-search-forward org-target-regexp nil t)
-             for target = (match-string 1)
+             for target = (org-link-completion-annotate
+                           (match-string-no-properties 1)
+                           "Dedicated")
              when target
              collect target)))
 
@@ -645,7 +647,9 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
     (goto-char (point-min))
     (cl-loop while (re-search-forward "^[ \t]*#\\+NAME:[ \t]*\\(.*?\\)[ \t]*$"
                                       nil t)
-             collect (match-string-no-properties 1))))
+             collect (org-link-completion-annotate
+                      (match-string-no-properties 1)
+                      "Name"))))
 
 ;;;;; Untyped Description
 
