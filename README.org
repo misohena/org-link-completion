@@ -109,7 +109,7 @@ No arguments are passed to functions called from the ~org-link-completion-at-poi
 
 The called function must return the same format as the function registered with ~completion-at-point-functions~. Please refer to the elisp manual for details.
 
-[[https://www.gnu.org/software/emacs/manual/html_node/elisp/Completion-in-Buffers.html][Completion in Buffers (GNU Emacs Lisp Reference Manual)]] ([[https:// ayatakesi.github.io/lispref/29.2/html/Completion-in-Buffers.html][ayatakesi's Japanese translation (29.2)]])
+[[https://www.gnu.org/software/emacs/manual/html_node/elisp/Completion-in-Buffers.html][Completion in Buffers (GNU Emacs Lisp Reference Manual)]] ([[https://ayatakesi.github.io/lispref/29.2/html/Completion-in-Buffers.html][ayatakesi's Japanese translation (29.2)]])
 
 * Parsing links and getting results
 
