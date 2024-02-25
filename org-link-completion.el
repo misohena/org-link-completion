@@ -365,12 +365,7 @@ To use this, do the following in org-mode buffer:
                            ('desc org-link-completion-capf-desc-unknown-type)
                            ))))
           ;;(message "capf=%s" capf)
-          (when (functionp capf)
-            (funcall capf))))))))
-
-(defun org-link-completion-call (fun)
-  (when (functionp fun)
-    (funcall fun)))
+          (org-link-completion-call capf)))))))
 
 
 ;;;; Complete Link Unknown Type
@@ -485,11 +480,9 @@ For example:
      org-link-completion-capf-path-untyped-functions)))
 
 (defun org-link-completion-capf-path-call-on-kind (path-beg path-end alist)
-  (let ((fun (alist-get
-              (org-link-completion-untyped-link-kind path-beg path-end)
+  (org-link-completion-call
+   (alist-get (org-link-completion-untyped-link-kind path-beg path-end)
               alist)))
-    (when (functionp fun)
-      (funcall fun))))
 
 ;;;;;; Custom-ID Path
 
@@ -882,7 +875,7 @@ in coderef format."
 (defun org-link-completion-call-collectors (collectors)
   "Call functions in the list COLLECTORS and concatenate the
  returned lists with `nconc'."
-  (mapcan (lambda (collector) (funcall collector)) collectors))
+  (mapcan (lambda (collector) (org-link-completion-call collector)) collectors))
 
 (defun org-link-completion-collect-stripped-internal-link-path ()
   "Collect a string with internal link symbols removed from the
@@ -904,6 +897,12 @@ in coderef format."
   (get-text-property 0 :org-link-completion-annotation str))
 
 ;;;;; Uncategorized
+
+(defun org-link-completion-call (fun)
+  "Call the completion function FUN.
+ The ability to disable user-specified functions may be added in the future."
+  (when (functionp fun)
+    (funcall fun)))
 
 (defun org-link-completion-strip-internal-link (path)
   "Strip prefix and suffix (if any) at the beginning or end of internal links.
