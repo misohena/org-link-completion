@@ -42,6 +42,8 @@ Another library that uses this library to provide completion functions is:
 
 Also, as a usage example, I'll show you a function I use later that completes links to blog posts.
 
+[[file:link-examples.org][link-examples.org]] is provided so that you can try out various link completions.
+
 * Setup
 
 Place org-link-completion.el in load-path and add the following code to init.el.

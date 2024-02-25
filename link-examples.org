@@ -1,0 +1,157 @@
+#+TITLE: Link Examples
+#+STARTUP: showall
+
+* Untyped Link
+:PROPERTIES:
+:CUSTOM_ID: untyped-link
+:END:
+
+- Internal Links
+  - [[
+  - [[Apple][
+  - [[Ap
+  - [[Apricot][
+  - [[Orange][
+  - [[Danraku][
+  - [[My
+  - [[My Target][
+  - [[Unknown Target][
+  - [[*
+  - [[*Target Example][
+  - [[#
+  - [[#custom-id-example-1][
+  - [[(
+  - [[(back)][
+  - [[(back2)][
+  - [[(hello-world)]["Hello, \\[[World]@@-:@@]// !!"))]]  (Export Snippet Hack)
+- External Links
+  - [[/dir/file][
+  - [[./R
+  - [[~/.emacs.d/]
+  - [[c:/home/
+  - [[../org-link-completion/
+  - [[../org-link-completion/README.org][
+
+* Typed Link
+:PROPERTIES:
+:CUSTOM_ID: typed-link
+:END:
+
+- [[
+- file
+  - [[file:README.org
+  - [[file:README.org][
+  - [[file:/home/
+  - [[file:/home/][
+  - [[file:link-examples.org::Danraku
+  - [[file:README.org::*Setup]
+  - [[file:README.org::#custom-id-example-2
+  - [[file:::*Link Target
+- https
+  - [[https://
+  - [[https://misohena.jp/blog/2024-02-23-org-link-completion-el.html][
+
+* Unsupported
+- Outside Text
+  - .[
+  - [.
+  - [[Link Target].
+  - [[Link Target][description].
+  - [[Link Target][description]].
+- Contains Line Breaks
+  - [[Link
+   Target][description]]
+  - [[Link Target][desc
+   ription]]
+
+* Not Link
+- [[My Target\][description]]
+- [[My [Target][description]]
+- [[My ]Target][description]]
+
+* Link Target
+** Paragraph
+
+<<Danraku>>これは段落ですよ。
+
+私のターゲットですよ。<<My Target>>
+
+<<<ラジオターゲット>>>と区別できるのかな。ラジオターゲットって面白いね。
+
+<<ラジオターゲット>>←にラジオターゲットという名前のdedicated targetがあるんだけど。[[ラジオターゲット]]からリンクしちゃうもんね。
+
+三単語。<<My Target Desuyo>>
+
+** List
+- Apple 15 <<Apple>>
+- Orange 12
+- Apricot 23
+
+description list
+- Senburi :: Rindou-ka Senburi-zoku
+- Akebonosou :: Rindou-ka Senburi-zoku
+- Shinonomesou :: Rindou-ka Senburi-zoku
+
+** Table
+#+NAME: table-1
+| Name    | Quantity | Note       |
+|---------+----------+------------|
+| Apple   |       15 |            |
+| Orange  |       12 | <<Orange>> |
+| Apricot |       23 | <<Apricot>> |
+
+** Custom ID 1
+:PROPERTIES:
+:CUSTOM_ID: custom-id-example-1
+:END:
+
+** Custom ID 2
+:PROPERTIES:
+:CUSTOM_ID: custom-id-example-2
+:END:
+
+** Source Blocks
+:PROPERTIES:
+:CUSTOM_ID: source-blocks
+:END:
+
+#+NAME: coderef-example
+#+begin_src elisp -n -r
+(forward-char)
+(forward-char)
+(backward-char) (ref:back)
+(forward-char)
+#+end_src
+
+[[(back)][(backward-char)の所]]だけ左に動きます。
+
+#+begin_src elisp -n -r
+(forward-char)
+(forward-char)
+(backward-char) (ref:back2)
+(backward-char) (ref:back3)
+(forward-char)
+#+end_src
+
+#+begin_src elisp -n -r
+(let ((text
+       "Hello, \\[[World]]// !!"))  (ref:hello-world)
+  (print text))
+#+end_src
+
+#+begin_src elisp -n -r -l "[REFID:%s]"
+(let ((text
+       "Konnichiwa, \\[[Sekai]]// !!"))  [REFID:konnichiwa-sekai]
+  (print text))
+#+end_src
+
+[[(konnichiwa-sekai)]]
+
+** HTTPS
+
+- [[https://github.com/misohena/org-link-completion][misohena/org-link-completion: Complete the link type, path and description part of links at point in org-mode buffer.]]
+- [[https://github.com/misohena/org-link-completion/blob/main/README-ja.org][org-link-completion/README-ja.org at main · misohena/org-link-completion]]
+- [[https://misohena.jp/blog/2024-02-23-org-link-completion-el.html][org-link-completion.el | Misohena Blog]]
+- [[https://misohena.jp/blog/2024-02-23-org-link-completion-el.html][2024年2月23日の記事]]
+- [[https://orgmode.org/manual/Hyperlinks.html][Hyperlinks (The Org Manual)]]
+- [[https://orgmode.org/manual/Literal-Examples.html][Literal Examples (The Org Manual)]]

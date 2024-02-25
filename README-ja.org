@@ -40,6 +40,8 @@
 
 また、使用例として、私が使っているブログ投稿へのリンクを補完する関数を後ほど紹介します。
 
+様々なリンクの補完を試せるように[[file:link-examples.org][link-examples.org]]が用意されています。
+
 * セットアップ
 
 org-link-completion.elをload-pathの通った場所に配置して、init.elに次のコードを追加してください。
