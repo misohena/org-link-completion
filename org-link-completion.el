@@ -568,9 +568,16 @@ coderef format."
   ;; Ref: `org-link-search'
   (save-excursion
     (goto-char (point-min))
-    (let (result)
+    (let (result
+          (re-block (concat "\\(?:"
+                            org-babel-src-block-regexp
+                            "\\)\\|\\(?:"
+                            ;; TODO: OK?
+                            (replace-regexp-in-string
+                             "_src" "_example" org-babel-src-block-regexp t t)
+                            "\\)")))
       ;; For each code block
-      (while (re-search-forward org-babel-src-block-regexp nil t)
+      (while (re-search-forward re-block nil t)
         (goto-char (match-beginning 0))
         (let ((block-beg (match-beginning 0))
               (block-end (match-end 0))

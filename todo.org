@@ -1,9 +1,10 @@
 #+TITLE: やりたいことリスト
 
 * Inbox
-** TODO Example Blockに対するcoderefが補完できないのを直す
-org-element-typeはexample-blockを受け入れてもorg-babel-src-block-regexpを使っているのだから当然。でもexample-blockを検索する正規表現そのものは見当たらない。org-fontify-meta-lines-and-blocks-1のやり方はちょっと面倒だしなぁ。
-org-babel-src-block-regexpの_srcを_exampleに置換したらダメ？
+** TODO Example Blockの検索方法が正しいか検証する
+とりあえずorg-babel-src-block-regexpの_srcを_exampleに置換して間に合わせたが、それで大丈夫か確認する。
+org-fontify-meta-lines-and-blocks-1でのやり方と一致していれば問題ないと思う。
+後はorg-elementのやり方を見るとか。
 
 ** TODO ドライブレターの扱いを直す
 
@@ -101,3 +102,7 @@ CLOSED: [2024-02-25 Sun 13:37]
 - 関数名の-defaultは取り除く
 - 関数を入れる変数名に-functionを付ける
 - 変数名の-functionsと-functionが似すぎているので-kind-functionsにする
+** DONE Example Blockに対するcoderefが補完できないのを直す
+CLOSED: [2024-02-25 Sun 23:26]
+org-element-typeはexample-blockを受け入れてもorg-babel-src-block-regexpを使っているのだから当然。でもexample-blockを検索する正規表現そのものは見当たらない。org-fontify-meta-lines-and-blocks-1のやり方はちょっと面倒だしなぁ。
+org-babel-src-block-regexpの_srcを_exampleに置換したらダメ？→とりあえずそうした。

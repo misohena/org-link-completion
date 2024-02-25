@@ -145,7 +145,17 @@ description list
   (print text))
 #+end_src
 
-[[(konnichiwa-sekai)]]
+[[(konnichiwa-sekai)][(konnichiwa-sekai)行目]]
+
+** Example Block
+
+#+begin_example -n -r -l "<file:%s>"
+これは例です。
+2行目です。
+3行目です。   <file:in example block>
+#+end_example
+
+[[(in example block)][(in example block)行目]]
 
 ** HTTPS
 
