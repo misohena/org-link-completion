@@ -920,7 +920,9 @@ For example:
              ;; :kind <symbol>|<function>
              (:kind
               (list :company-kind
-                    (if (functionp value) value (lambda (_) value))))
+                    (if (functionp value)
+                        value
+                      (let ((kind value)) (lambda (_) kind)))))
              (_
               (list key value)))))
 
