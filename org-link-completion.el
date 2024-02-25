@@ -732,28 +732,35 @@ in search target format."
     (save-excursion
       (let ((table))
         (when (org-link-completion-link-search path)
-          ;; TODO: Allow customization
-          ;; Heading
-          (push (org-link-completion-get-heading) table) ;; or nil
+          ;; Heading (or nil)
+          (push (org-link-completion-call
+                 'org-link-completion-collect-search-desc-from-heading)
+                table)
 
           ;; Current line text
-          (push (org-link-completion-escape-description-string
-                 (string-trim
-                  ;; Remove <<...>> not <<<...>>>.
-                  (replace-regexp-in-string
-                   (concat "\\(?:[^<]\\|^\\)\\("
-                           org-target-regexp
-                           "\\)\\(?:[^>]\\|$\\)")
-                   ""
-                   (buffer-substring-no-properties (line-beginning-position)
-                                                   (line-end-position))
-                   nil nil 1)
-                  ;; Strip bullets and table separators
-                  "\\(?:[ \t\n\r]*[|-]\\)*[ \t]*"
-                  "\\(?:[ \t]*|\\)*[ \t]*"))
+          (push (org-link-completion-call
+                 'org-link-completion-collect-search-desc-from-current-line)
                 table))
         (delq nil table)))))
 
+(defun org-link-completion-collect-search-desc-from-heading ()
+  (org-link-completion-get-heading))
+
+(defun org-link-completion-collect-search-desc-from-current-line ()
+  (org-link-completion-escape-description-string
+   (string-trim
+    ;; Remove <<...>> not <<<...>>>.
+    (replace-regexp-in-string
+     (concat "\\(?:[^<]\\|^\\)\\("
+             org-target-regexp
+             "\\)\\(?:[^>]\\|$\\)")
+     ""
+     (buffer-substring-no-properties (line-beginning-position)
+                                     (line-end-position))
+     nil nil 1)
+    ;; Strip bullets and table separators
+    "\\(?:[ \t\n\r]*[|-]\\)*[ \t]*"
+    "\\(?:[ \t]*|\\)*[ \t]*")))
 
 ;;;;;; Coderef Description
 
@@ -783,22 +790,30 @@ in coderef format."
     (save-excursion
       (let (table)
         (when (org-link-completion-link-search path)
-          ;; TODO: Allow customization
-          ;; Heading
-          (push (org-link-completion-get-heading) table);; or nil
+          ;; Heading (or nil)
+          (push (org-link-completion-call
+                 'org-link-completion-collect-coderef-desc-from-heading)
+                table);; or nil
 
           ;; Current line text
-          (push (org-link-completion-escape-description-string
-                 (string-trim
-                  ;; Remove coderef target from the line.
-                  (replace-regexp-in-string
-                   (org-src-coderef-regexp (org-src-coderef-format
-                                            (org-element-at-point)))
-                   ""
-                   (buffer-substring-no-properties (line-beginning-position)
-                                                   (line-end-position)))))
+          (push (org-link-completion-call
+                 'org-link-completion-collect-coderef-desc-from-current-line)
                 table))
         (delq nil table)))))
+
+(defun org-link-completion-collect-coderef-desc-from-heading ()
+  (org-link-completion-get-heading))
+
+(defun org-link-completion-collect-coderef-desc-from-current-line ()
+  (org-link-completion-escape-description-string
+   (string-trim
+    ;; Remove coderef target from the line.
+    (replace-regexp-in-string
+     (org-src-coderef-regexp (org-src-coderef-format
+                              (org-element-at-point)))
+     ""
+     (buffer-substring-no-properties (line-beginning-position)
+                                     (line-end-position))))))
 
 (defun org-link-completion-collect-default-coderef-description ()
   "Line (<coderef>)"
@@ -941,6 +956,28 @@ To enable this, call `org-lnk-completion-setup-type-file' function."
 
 ;;;; Utilities for completion
 
+;;;;; Call Completion Function
+
+(defcustom org-link-completion-disabled-completion-functions nil
+  "List of completion functions to disable.
+
+Affects calls with `org-link-completion-call'."
+  :group 'org-link-completion
+  :type '(repeat (function)))
+
+(defun org-link-completion-call (fun &rest args)
+  "Call the completion function FUN with ARGS.
+
+Do not use this function for functions that must be called.
+
+Functions that are members of
+`org-link-completion-disabled-completion-functions' are not called
+and simply return nil."
+  (when (and (functionp fun)
+             (not (memq fun org-link-completion-disabled-completion-functions)))
+    (apply fun args)))
+
+
 ;;;;; Completion Table
 
 (defun org-link-completion-table-with-metadata (table metadata-alist)
@@ -1023,12 +1060,6 @@ To enable this, call `org-lnk-completion-setup-type-file' function."
     t))
 
 ;;;;; Uncategorized
-
-(defun org-link-completion-call (fun)
-  "Call the completion function FUN.
- The ability to disable user-specified functions may be added in the future."
-  (when (functionp fun)
-    (funcall fun)))
 
 (defun org-link-completion-strip-internal-link (path)
   "Strip prefix and suffix (if any) at the beginning or end of internal links.
