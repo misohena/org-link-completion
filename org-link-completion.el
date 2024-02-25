@@ -379,7 +379,7 @@ To use this, do the following in org-mode buffer:
 ;;;; Complete Link Type Part
 
 (defcustom org-link-completion-type-collectors
-  '(org-link-completion-collect-type-part-internal-link-symbols
+  '(org-link-completion-collect-type-part-internal-link-prefix-chars
     org-link-completion-collect-types
     ;; Consider the possibility that <type> is <target>.
     ;; For example: [[mytarget .
@@ -399,7 +399,7 @@ part of link."
       org-link-completion-type-collectors)
      :annotation-function #'org-link-completion-annotation)))
 
-(defun org-link-completion-collect-type-part-internal-link-symbols ()
+(defun org-link-completion-collect-type-part-internal-link-prefix-chars ()
   (list
    (org-link-completion-annotate "#" "CUSTOM_ID")
    (org-link-completion-annotate "*" "Heading")
