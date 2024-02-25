@@ -10,14 +10,15 @@ This Emacs Lisp library allows completion at various points in a link in org-mod
 You can complete almost anywhere within a link. By default, the following locations can be completed:
 
 - [[<link-type>:
+- [[<searchtarget>
 - [[#<custom-id>
 - [[#<custom-id>][<description>
 - [[*<heading>
 - [[*<heading>][<description>
 - [[(<coderef>)
 - [[(<coderef>)][<description>
-- [[My Target
-- [[My Target][<description>
+- [[Search Target
+- [[Search Target][<description>
 - [[/dir/file
 - [[./dir/file
 - [[/dir/file
@@ -28,6 +29,8 @@ You can complete almost anywhere within a link. By default, the following locati
 - [[file+emacs:<file>
 - [[file:<file>][<description> (Include file+sys: file+emacs:)
 - [[<unknown-type>:<path>][<description>
+
+Completion candidates are collected from the link destination and its surroundings, other similar links, syntactic constraints, the path part of the link (when completing the description part), etc.
 
 Completion functions can be changed and added to all of these parts.
 
@@ -69,39 +72,45 @@ You can also look at the contents of the org-link-completion-setup function and 
 
 * Functions called by org-link-completion-at-point function
 
+The ~org-link-completion-at-point~ function is called first when completing a link.
+
+This function first analyzes the area around the point and determines the location of each part of the link and which part the point points to.
+
 In this library, each part of the link is classified as follows.
 
 : [[<type>:<path>][<description>
 
-The org-link-completion-at-point function analyzes the area around the point, and then calls the following function depending on where the point is in the link and what the link type (<type>) is. Decide as follows.
+Determine the position of each of these parts within the buffer and where the point is located. (This information is retained in the ~org-link-completion-pos~ variable during analysis)
 
-- Point is in <type> => org-link-completion-type variable (default: org-link-completion-type-default function)
+Then, based on this information, determine and call a function that performs more specific processing as shown below.
 
-- <type> is empty:
-   - Point is in <path> => org-link-completion-path-untyped variable (default: org-link-completion-path-untyped-default function)
-   - Point is in <desc> => org-link-completion-desc-untyped variable (default: org-link-completion-desc-untyped-default function)
+- Point is in /<type>/ => call ~org-link-completion-type-function~ variable (default: ~org-link-completion-type~ function)
 
-- <type> is a valid link type (contained in the org-link-parameters variable):
-   Get the function from the following properties of link type <type> set in the org-link-parameters variable and call it:
-   - Point is in <path> => :capf-path property of link type <type>
-   - Point is in <desc> => :capf-desc property of link type <type>
-   - If the above properties are missing => :completino-at-point property
+- /<type>/ is empty:
+   - Point is in /<path>/ => call ~org-link-completion-path-untyped-function~ variable (default: ~org-link-completion-path-untyped~ function)
+   - Point is in /<desc>/ => call ~org-link-completion-desc-untyped-function~ variable (default: ~org-link-completion-desc-untyped~ function)
+
+- /<type>/ is a valid link type (defined in ~org-link-parameters~ variable):
+   Call the function set to the following properties of the ~org-link-parameters~ variable:
+   - Point is in /<path>/ => ~:capf-path~ property of link type /<type>/
+   - Point is in /<desc>/ => ~:capf-desc~ property of link type /<type>/
+   - If the above properties are missing => ~:completino-at-point~ property
      (The function set for this property must change its behavior depending on the part where the point is.)
 
-- No completion function found for <type>:
+- No completion function found for /<type>/:
 
-  - point is on <path> => call `org-link-completion-path-unknown-type' variable (default: org-link-completion-path-unknown-type-default function)
-  - point is on <desc> => call `org-link-completion-desc-unknown-type' variable (default: org-link-completion-desc-unknown-type-default function)
+  - point is on /<path>/ => call ~org-link-completion-path-unknown-type-function~ variable (default: ~org-link-completion-path-unknown-type~ function)
+  - point is on /<desc>/ => call ~org-link-completion-desc-unknown-type-function~ variable (default: ~org-link-completion-desc-unknown-type~ function)
 
-No arguments are passed to functions called from the org-link-completion-at-point function. However, it caches the parsed information in the org-link-completion-pos variable before calling it. The called function can refer to that information or ignore it and re-analyze it as needed.
+No arguments are passed to functions called from the ~org-link-completion-at-point~ function. However, it caches the parsed information in the ~org-link-completion-pos~ variable before calling it. The called function can refer to that information or ignore it and re-analyze it as needed.
 
-The called function must return the same format as the function registered with completion-at-point-functions. Please refer to the elisp manual for details.
+The called function must return the same format as the function registered with ~completion-at-point-functions~. Please refer to the elisp manual for details.
 
 [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Completion-in-Buffers.html][Completion in Buffers (GNU Emacs Lisp Reference Manual)]] ([[https:// ayatakesi.github.io/lispref/29.2/html/Completion-in-Buffers.html][ayatakesi's Japanese translation (29.2)]])
 
 * Parsing links and getting results
 
-Link analysis is performed by the org-link-completion-parse-at-point function.
+Link analysis is performed by the ~org-link-completion-parse-at-point~ function.
 
 This function takes no arguments, looks before and after the point, and returns the region where the point is and the range of each region before the point.
 
@@ -110,7 +119,7 @@ This function takes no arguments, looks before and after the point, and returns 
 ;; WHERE ::= type | path | desc
 #+end_src
 
-Functions called from the org-link-completion-at-point function usually do not need to call this function directly. The cached result is stored in the org-link-completion-pos variable, so you can retrieve it from there. However, it is possible to write code for the case where there are no cached values.
+Functions called from the ~org-link-completion-at-point~ usually do not need to call this function directly. The cached result is stored in the ~org-link-completion-pos~ variable, so you can retrieve it from there. However, it is possible to write code for the case where there are no cached values.
 
 #+begin_src elisp
 (when-let ((pos (or org-link-completion-pos

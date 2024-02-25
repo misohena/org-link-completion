@@ -271,33 +271,33 @@ of the link, do nothing. nil means to accept any part."
 
 ;; See: `org-link-completion-at-point' function.
 
-(defcustom org-link-completion-type
-  #'org-link-completion-type-default
+(defcustom org-link-completion-type-function
+  #'org-link-completion-type
   "Function to complete link type part."
   :group 'org-link-completion
   :type 'function)
 
-(defcustom org-link-completion-path-untyped
-  #'org-link-completion-path-untyped-default
+(defcustom org-link-completion-path-untyped-function
+  #'org-link-completion-path-untyped
   "Function to complete path of a link that does not have type specification."
   :group 'org-link-completion
   :type 'function)
 
-(defcustom org-link-completion-desc-untyped
-  #'org-link-completion-desc-untyped-default
+(defcustom org-link-completion-desc-untyped-function
+  #'org-link-completion-desc-untyped
   "Function to complete description of a link that does not have
  type specification."
   :group 'org-link-completion
   :type 'function)
 
-(defcustom org-link-completion-path-unknown-type
-  #'org-link-completion-path-unknown-type-default
+(defcustom org-link-completion-path-unknown-type-function
+  #'org-link-completion-path-unknown-type
   "Function to complete path of a link that is unknown type."
   :group 'org-link-completion
   :type 'function)
 
-(defcustom org-link-completion-desc-unknown-type
-  #'org-link-completion-desc-unknown-type-default
+(defcustom org-link-completion-desc-unknown-type-function
+  #'org-link-completion-desc-unknown-type
   "Function to complete description of a link that is unknown type."
   :group 'org-link-completion
   :type 'function)
@@ -312,12 +312,12 @@ type.
 
 [[<type>:<path>][<desc>]]
 
-- point is on <type> => call `org-link-completion-type' variable
+- point is on <type> => call `org-link-completion-type-function' variable
 
 - <type> is empty:
 
-  - point is on <path> => call `org-link-completion-path-untyped' variable
-  - point is on <desc> => call `org-link-completion-desc-untyped' variable
+  - point is on <path> => call `org-link-completion-path-untyped-function'
+  - point is on <desc> => call `org-link-completion-desc-untyped-function'
 
 - <type> is a valid link type:
 
@@ -330,8 +330,8 @@ type.
 
 - No completion function found for <type>:
 
-  - point is on <path> => call `org-link-completion-path-unknown-type' var
-  - point is on <desc> => call `org-link-completion-desc-unknown-type' var
+  - point is on <path> => call `org-link-completion-path-unknown-type-function'
+  - point is on <desc> => call `org-link-completion-desc-unknown-type-function'
 
 No arguments are passed to the function. However, before it is
 called, the variable `org-link-completion-pos' is set with
@@ -349,13 +349,13 @@ To use this, do the following in org-mode buffer:
            (type (org-link-completion-pos-ref pos type)))
       (cond
        ((eq where 'type)
-        (org-link-completion-call org-link-completion-type))
+        (org-link-completion-call org-link-completion-type-function))
        ((string-empty-p type)
         (pcase where
           ('path (org-link-completion-call
-                  org-link-completion-path-untyped))
+                  org-link-completion-path-untyped-function))
           ('desc (org-link-completion-call
-                  org-link-completion-desc-untyped))))
+                  org-link-completion-desc-untyped-function))))
        (t
         (let* ((capf-prop (pcase where
                             ('path :capf-path)
@@ -363,8 +363,8 @@ To use this, do the following in org-mode buffer:
                (capf (or (org-link-get-parameter type capf-prop)
                          (org-link-get-parameter type :completion-at-point)
                          (pcase where
-                           ('path org-link-completion-path-unknown-type)
-                           ('desc org-link-completion-desc-unknown-type)
+                           ('path org-link-completion-path-unknown-type-function)
+                           ('desc org-link-completion-desc-unknown-type-function)
                            ))))
           ;;(message "capf=%s" capf)
           (org-link-completion-call capf)))))))
@@ -372,7 +372,7 @@ To use this, do the following in org-mode buffer:
 
 ;;;; Complete Link Type Part
 
-(defcustom org-link-completion-type-default-collectors
+(defcustom org-link-completion-type-collectors
   '(org-link-completion-collect-type-part-internal-link-symbols
     org-link-completion-collect-types
     ;; Consider the possibility that <type> is <target>.
@@ -383,14 +383,14 @@ part of link."
   :group 'org-link-completion
   :type '(repeat (function)))
 
-(defun org-link-completion-type-default ()
+(defun org-link-completion-type ()
   "Comlete [[#<type>: part of link at point."
   (org-link-completion-parse-let :type (type-beg type-end)
     (org-link-completion-capf-result
      type-beg
      (if (eq (char-after type-end) ?:) (1+ type-end) type-end)
      (org-link-completion-call-collectors
-      org-link-completion-type-default-collectors)
+      org-link-completion-type-collectors)
      :annotation-function #'org-link-completion-annotation)))
 
 (defun org-link-completion-collect-type-part-internal-link-symbols ()
@@ -410,7 +410,7 @@ part of link."
 
 ;; Complete links without <type>: part.
 
-;; `org-link-completion-path-untyped-default'
+;; `org-link-completion-path-untyped'
 ;;
 ;; Internal Links
 ;;  [[#custom-id       => `org-link-completion-path-custom-id'
@@ -448,7 +448,7 @@ part of link."
 
 ;;;;; Untyped Path
 
-(defcustom org-link-completion-path-untyped-functions
+(defcustom org-link-completion-path-untyped-kind-functions
   '((custom-id . org-link-completion-path-custom-id)
     (heading . org-link-completion-path-heading)
     (coderef . org-link-completion-path-coderef)
@@ -458,7 +458,7 @@ part of link."
   :group 'org-link-completion
   :type 'alist)
 
-(defun org-link-completion-path-untyped-default ()
+(defun org-link-completion-path-untyped ()
   "Complete <path> of link that does not have <type>: at point.
 
 For example:
@@ -470,7 +470,7 @@ For example:
   (org-link-completion-parse-let :path (path-beg path-end)
     (org-link-completion-path-call-on-kind
      path-beg path-end
-     org-link-completion-path-untyped-functions)))
+     org-link-completion-path-untyped-kind-functions)))
 
 (defun org-link-completion-path-call-on-kind (path-beg path-end alist)
   (org-link-completion-call
@@ -639,7 +639,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 ;;;;; Untyped Description
 
-(defcustom org-link-completion-desc-untyped-functions
+(defcustom org-link-completion-desc-untyped-kind-functions
   '((custom-id . org-link-completion-desc-custom-id)
     (heading . org-link-completion-desc-heading)
     (coderef . org-link-completion-desc-coderef)
@@ -649,11 +649,11 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
   :group 'org-link-completion
   :type 'alist)
 
-(defun org-link-completion-desc-untyped-default ()
+(defun org-link-completion-desc-untyped ()
   (org-link-completion-parse-let :desc (path-beg path-end)
     (org-link-completion-path-call-on-kind
      path-beg path-end
-     org-link-completion-desc-untyped-functions)))
+     org-link-completion-desc-untyped-kind-functions)))
 
 ;;;;;; Custom-ID Description
 
@@ -829,10 +829,10 @@ in coderef format."
 
 ;;;;; Complete Unknown Type Link
 
-(defun org-link-completion-path-unknown-type-default ()
+(defun org-link-completion-path-unknown-type ()
   (org-link-completion-path-from-other-links))
 
-(defun org-link-completion-desc-unknown-type-default ()
+(defun org-link-completion-desc-unknown-type ()
   (org-link-completion-desc-from-other-links))
 
 

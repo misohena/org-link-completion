@@ -8,14 +8,15 @@
 ƒŠƒ“ƒN“à‚Ì‚Ù‚Ú‘S‚Ä‚ÌêŠ‚Å•âŠ®‚ª‚Å‚«‚Ü‚·BƒfƒtƒHƒ‹ƒg‚Å‚ÍŸ‚ÌêŠ‚ª•âŠ®‰Â”\‚Å‚·B
 
 - [[<link-type>:
+- [[<searchtarget>
 - [[#<custom-id>
 - [[#<custom-id>][<description>
 - [[*<heading>
 - [[*<heading>][<description>
 - [[(<coderef>)
 - [[(<coderef>)][<description>
-- [[My Target
-- [[My Target][<description>
+- [[Search Target
+- [[Search Target][<description>
 - [[/dir/file
 - [[./dir/file
 - [[/dir/file
@@ -26,6 +27,8 @@
 - [[file+emacs:<file>
 - [[file:<file>][<description> (Include file+sys: file+emacs:)
 - [[<unknown-type>:<path>][<description>
+
+•âŠ®Œó•â‚ÍƒŠƒ“ƒNæ‚â‚»‚Ìü•ÓA‘¼‚Ì“¯í‚ÌƒŠƒ“ƒNA\•¶ã‚Ì§–ñAƒŠƒ“ƒN‚ÌƒpƒX•”•ª(à–¾•”•ª‚ğ•âŠ®‚·‚é‚Æ‚«)“™‚©‚çûW‚µ‚Ü‚·B
 
 ‚±‚ê‚ç‘S‚Ä‚Ì•”ˆÊ‚Å•âŠ®ŠÖ”‚ğ•ÏXE’Ç‰Á‚Å‚«‚é‚æ‚¤‚É‚È‚Á‚Ä‚¢‚Ü‚·B
 
@@ -67,38 +70,45 @@ org-link-completion-setupŠÖ”‚Ì’†g‚ğŒ©‚ÄA•K—v‚È—v‘f‚¾‚¯‚ğ”²‚«o‚µ‚ÄƒZƒbƒgƒAƒbƒ
 
 * org-link-completion-at-pointŠÖ”‚ªŒÄ‚Ño‚·ŠÖ”
 
+~org-link-completion-at-point~ ŠÖ”‚ÍAƒŠƒ“ƒN‚Ì“à•”‚ğ•âŠ®‚·‚é‚Æ‚«‚Éˆê”ÔÅ‰‚ÉŒÄ‚Ño‚³‚ê‚Ü‚·B
+
+‚±‚ÌŠÖ”‚Í‚Ü‚¸Å‰‚Éƒ|ƒCƒ“ƒg‚ª‚ ‚éêŠ‚Ìü•Ó‚ğ‰ğÍ‚µAƒŠƒ“ƒN‚ÌŠe•”‚ÌˆÊ’u‚Æƒ|ƒCƒ“ƒg‚ª‚Ç‚Ì•”ˆÊ‚ğw‚µ‚Ä‚¢‚é‚©‚ğ“Á’è‚µ‚Ü‚·B
+
 –{ƒ‰ƒCƒuƒ‰ƒŠ‚Å‚ÍƒŠƒ“ƒN“à‚ÌŠe•”ˆÊ‚ğŸ‚Ì‚æ‚¤‚É•ª—Ş‚µ‚Ä‚¢‚Ü‚·B
 
 : [[<type>:<path>][<description>
 
-org-link-completion-at-pointŠÖ”‚ÍAƒ|ƒCƒ“ƒg‚ª‚ ‚éêŠ‚Ìü•Ó‚ğ‰ğÍ‚µ‚½‚ ‚ÆAƒ|ƒCƒ“ƒg‚ªƒŠƒ“ƒN“à‚Ì‚Ç‚Ì•”ˆÊ‚É‚ ‚é‚©‚âƒŠƒ“ƒNƒ^ƒCƒv(<type>)‚ª‰½‚©‚É‚æ‚Á‚ÄŒÄ‚Ño‚·ŠÖ”‚ğŸ‚Ì‚æ‚¤‚ÉŒˆ’è‚µ‚Ü‚·B
+‚±‚ê‚çŠe•”‚Ìƒoƒbƒtƒ@“à‚Å‚ÌˆÊ’u‚ÆAƒ|ƒCƒ“ƒg‚ª‚Ç‚Ì•”ˆÊ‚É‚ ‚é‚©‚ğ“Á’è‚µ‚Ü‚·B(‚±‚ê‚ç‚Ìî•ñ‚Í‰ğÍ’† ~org-link-completion-pos~ •Ï”‚É•Û‚³‚ê‚Ü‚·)
 
-- ƒ|ƒCƒ“ƒg‚ª<type>‚Ì•”•ª‚É‚ ‚é => org-link-completion-type •Ï”(ƒfƒtƒHƒ‹ƒg: org-link-completion-type-default ŠÖ”)
+‚»‚ÌŒã‚±‚ê‚ç‚Ìî•ñ‚ğŒ³‚É‚æ‚è‹ï‘Ì“I‚Èˆ—‚ğs‚¤ŠÖ”‚ğŸ‚Ì‚æ‚¤‚ÉŒˆ’è‚µAŒÄ‚Ño‚µ‚Ü‚·B
 
-- <type>‚ª‹ó:
-  - ƒ|ƒCƒ“ƒg‚ª<path>‚Ì•”•ª‚É‚ ‚é => org-link-completion-path-untyped •Ï”(ƒfƒtƒHƒ‹ƒg: org-link-completion-path-untyped-default ŠÖ”)
-  - ƒ|ƒCƒ“ƒg‚ª<desc>‚Ì•”•ª‚É‚ ‚é => org-link-completion-desc-untyped •Ï”(ƒfƒtƒHƒ‹ƒg: org-link-completion-desc-untyped-default ŠÖ”)
+- ƒ|ƒCƒ“ƒg‚ª /<type>/ ‚Ì•”•ª‚É‚ ‚é => ~org-link-completion-type-function~ •Ï”(ƒfƒtƒHƒ‹ƒg: ~org-link-completion-type~ ŠÖ”)
 
-- <type>‚ª—LŒø‚ÈƒŠƒ“ƒNƒ^ƒCƒv(org-link-parameters•Ï”‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚é):
-  org-link-parameters •Ï”‚Éİ’è‚³‚ê‚Ä‚¢‚éAƒŠƒ“ƒNƒ^ƒCƒv<type>‚ÌŸ‚ÌƒvƒƒpƒeƒB‚©‚çŠÖ”‚ğæ“¾‚µ‚Ä‚»‚ê‚ğŒÄ‚Ño‚·:
-  - ƒ|ƒCƒ“ƒg‚ª<path>‚Ì•”•ª‚É‚ ‚é => ƒŠƒ“ƒNƒ^ƒCƒv<type>‚Ì :capf-path ƒvƒƒpƒeƒB
-  - ƒ|ƒCƒ“ƒg‚ª<desc>‚Ì•”•ª‚É‚ ‚é => ƒŠƒ“ƒNƒ^ƒCƒv<type>‚Ì :capf-desc ƒvƒƒpƒeƒB
-  - ã‹L‚ÌƒvƒƒpƒeƒB‚ª–³‚¢ê‡ => :completino-at-point ƒvƒƒpƒeƒB
+- /<type>/ ‚ª‹ó:
+  - ƒ|ƒCƒ“ƒg‚ª /<path>/ ‚Ì•”•ª‚É‚ ‚é => ~org-link-completion-path-untyped-function~ •Ï”(ƒfƒtƒHƒ‹ƒg: ~org-link-completion-path-untyped~ ŠÖ”)
+  - ƒ|ƒCƒ“ƒg‚ª /<desc>/ ‚Ì•”•ª‚É‚ ‚é => ~org-link-completion-desc-untyped-function~ •Ï”(ƒfƒtƒHƒ‹ƒg: ~org-link-completion-desc-untyped~ ŠÖ”)
+
+- /<type>/ ‚ª—LŒø‚ÈƒŠƒ“ƒNƒ^ƒCƒv(~org-link-parameters~ •Ï”“à‚Å’è‹`‚³‚ê‚Ä‚¢‚é):
+  ~org-link-parameters~ •Ï”‚ÌŸ‚ÌƒvƒƒpƒeƒB‚Éİ’è‚³‚ê‚Ä‚¢‚éŠÖ”‚ğŒÄ‚Ño‚·:
+  - ƒ|ƒCƒ“ƒg‚ª /<path>/ ‚Ì•”•ª‚É‚ ‚é => ƒŠƒ“ƒNƒ^ƒCƒv /<type>/ ‚Ì ~:capf-path~ ƒvƒƒpƒeƒB
+  - ƒ|ƒCƒ“ƒg‚ª /<desc>/ ‚Ì•”•ª‚É‚ ‚é => ƒŠƒ“ƒNƒ^ƒCƒv /<type>/ ‚Ì ~:capf-desc~ ƒvƒƒpƒeƒB
+  - ã‹L‚ÌƒvƒƒpƒeƒB‚ª–³‚¢ê‡ => ~:completino-at-point~ ƒvƒƒpƒeƒB
     (‚±‚ÌƒvƒƒpƒeƒB‚Éİ’è‚·‚éŠÖ”‚Íƒ|ƒCƒ“ƒg‚ª‚ ‚é•”ˆÊ‚É‚æ‚Á‚Ä“®ì‚ğ•Ï‚¦‚é•K—v‚ª‚ ‚è‚Ü‚·)
 
-- <type>‚É‘Î‚·‚é•âŠ®ŠÖ”‚ªŒ©‚Â‚©‚ç‚È‚¢:
-  - ƒ|ƒCƒ“ƒg‚ª<path>‚Ì•”•ª‚É‚ ‚é => org-link-completion-path-unknown-type •Ï”(ƒfƒtƒHƒ‹ƒg: org-link-completion-path-unknown-type-default ŠÖ”)
-  - ƒ|ƒCƒ“ƒg‚ª<desc>‚Ì•”•ª‚É‚ ‚é => org-link-completion-desc-unknown-type •Ï”(ƒfƒtƒHƒ‹ƒg: org-link-completion-desc-unknown-type-default ŠÖ”)
+- /<type>/ ‚É‘Î‚·‚é•âŠ®ŠÖ”‚ªŒ©‚Â‚©‚ç‚È‚¢:
 
-org-link-completion-at-pointŠÖ”‚©‚çŒÄ‚Ño‚³‚ê‚éŠÖ”‚É‚Íˆø”‚Í“n‚³‚ê‚Ü‚¹‚ñB‚½‚¾‚µA‰ğÍ‚µ‚½î•ñ‚ğ org-link-completion-pos •Ï”‚ÉƒLƒƒƒbƒVƒ…‚µ‚Ä‚©‚çŒÄ‚Ño‚µ‚Ü‚·BŒÄ‚Ño‚³‚ê‚½ŠÖ”‚Í•K—v‚É‰‚¶‚Ä‚»‚Ìî•ñ‚ğQÆ‚·‚é‚©A–³‹‚µ‚ÄÄ‰ğÍ‚·‚é‚±‚Æ‚ào—ˆ‚Ü‚·B
+  - ƒ|ƒCƒ“ƒg‚ª /<path>/ ‚Ì•”•ª‚É‚ ‚é => ~org-link-completion-path-unknown-type-function~ •Ï”(ƒfƒtƒHƒ‹ƒg: ~org-link-completion-path-unknown-type~ ŠÖ”)
+  - ƒ|ƒCƒ“ƒg‚ª /<desc>/ ‚Ì•”•ª‚É‚ ‚é => ~org-link-completion-desc-unknown-type-function~ •Ï”(ƒfƒtƒHƒ‹ƒg: ~org-link-completion-desc-unknown-type~ ŠÖ”)
 
-ŒÄ‚Ño‚³‚ê‚éŠÖ”‚Í completion-at-point-functions ‚É“o˜^‚³‚ê‚éŠÖ”‚Æ“¯‚¶Œ`®‚ğ•Ô‚·•K—v‚ª‚ ‚è‚Ü‚·BÚ‚µ‚­‚ÍEmacs Lispƒ}ƒjƒ…ƒAƒ‹‚ğQÆ‚µ‚Ä‚­‚¾‚³‚¢B
+~org-link-completion-at-point~ ŠÖ”‚©‚çŒÄ‚Ño‚³‚ê‚éŠÖ”‚É‚Íˆø”‚Í“n‚³‚ê‚Ü‚¹‚ñB‚½‚¾‚µA‰ğÍ‚µ‚½î•ñ‚ğ ~org-link-completion-pos~ •Ï”‚ÉƒLƒƒƒbƒVƒ…‚µ‚Ä‚©‚çŒÄ‚Ño‚µ‚Ü‚·BŒÄ‚Ño‚³‚ê‚½ŠÖ”‚Í•K—v‚É‰‚¶‚Ä‚»‚Ìî•ñ‚ğQÆ‚·‚é‚©A–³‹‚µ‚ÄÄ‰ğÍ‚·‚é‚±‚Æ‚ào—ˆ‚Ü‚·B
+
+ŒÄ‚Ño‚³‚ê‚éŠÖ”‚Í ~completion-at-point-functions~ ‚É“o˜^‚³‚ê‚éŠÖ”‚Æ“¯‚¶Œ`®‚ğ•Ô‚·•K—v‚ª‚ ‚è‚Ü‚·BÚ‚µ‚­‚ÍEmacs Lispƒ}ƒjƒ…ƒAƒ‹‚ğQÆ‚µ‚Ä‚­‚¾‚³‚¢B
 
 [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Completion-in-Buffers.html][Completion in Buffers (GNU Emacs Lisp Reference Manual)]] ([[https://ayatakesi.github.io/lispref/29.2/html/Completion-in-Buffers.html][ayatakesi‚³‚ñ‚Ì“ú–{Œê–ó(29.2)]])
 
 * ƒŠƒ“ƒN‚Ì‰ğÍ‚ÆŒ‹‰Ê‚Ìæ“¾
 
-ƒŠƒ“ƒN‰ğÍ‚Í org-link-completion-parse-at-point ŠÖ”‚ªs‚¢‚Ü‚·B
+ƒŠƒ“ƒN‰ğÍ‚Í ~org-link-completion-parse-at-point~ ŠÖ”‚ªs‚¢‚Ü‚·B
 
 ‚±‚ÌŠÖ”‚Íˆø”‚ğæ‚ç‚¸Aƒ|ƒCƒ“ƒg‚ª‚ ‚éêŠ‚Ì‘OŒã‚ğ’²‚×‚ÄAƒ|ƒCƒ“ƒg‚ª‚Ç‚Ì•”ˆÊ‚É‚ ‚é‚©‚Æƒ|ƒCƒ“ƒg‚æ‚è‘O‚É‚ ‚éŠe•”ˆÊ‚Ì”ÍˆÍ‚ğ•Ô‚µ‚Ü‚·B
 
@@ -107,7 +117,7 @@ org-link-completion-at-pointŠÖ”‚©‚çŒÄ‚Ño‚³‚ê‚éŠÖ”‚É‚Íˆø”‚Í“n‚³‚ê‚Ü‚¹‚ñB‚½‚¾
 ;; WHERE ::= type | path | desc
 #+end_src
 
-org-link-completion-at-pointŠÖ”‚©‚çŒÄ‚Ño‚³‚ê‚éŠÖ”‚Í’Êí‚±‚ÌŠÖ”‚ğ’¼ÚŒÄ‚Ño‚·•K—v‚Í‚ ‚è‚Ü‚¹‚ñBorg-link-completion-pos•Ï”‚ÉƒLƒƒƒbƒVƒ…‚³‚ê‚½Œ‹‰Ê‚ªŠi”[‚³‚ê‚Ä‚¢‚é‚Ì‚Å‚»‚±‚©‚çæ‚èo‚·‚±‚Æ‚ªo—ˆ‚Ü‚·B‚½‚¾‚µAƒLƒƒƒbƒVƒ…‚³‚ê‚½’l‚ª‚È‚¢ê‡‚É”õ‚¦‚½ƒR[ƒh‚ğ‘‚­‚±‚Æ‚à‰Â”\‚Å‚·B
+~org-link-completion-at-point~ ŠÖ”‚©‚çŒÄ‚Ño‚³‚ê‚éŠÖ”‚Í’Êí‚±‚ÌŠÖ”‚ğ’¼ÚŒÄ‚Ño‚·•K—v‚Í‚ ‚è‚Ü‚¹‚ñB ~org-link-completion-pos~ •Ï”‚ÉƒLƒƒƒbƒVƒ…‚³‚ê‚½Œ‹‰Ê‚ªŠi”[‚³‚ê‚Ä‚¢‚é‚Ì‚Å‚»‚±‚©‚çæ‚èo‚·‚±‚Æ‚ªo—ˆ‚Ü‚·B‚½‚¾‚µAƒLƒƒƒbƒVƒ…‚³‚ê‚½’l‚ª‚È‚¢ê‡‚É”õ‚¦‚½ƒR[ƒh‚ğ‘‚­‚±‚Æ‚à‰Â”\‚Å‚·B
 
 #+begin_src elisp
 (when-let ((pos (or org-link-completion-pos
