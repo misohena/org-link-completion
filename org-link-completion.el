@@ -269,6 +269,8 @@ of the link, do nothing. nil means to accept any part."
 
 ;;;; Completion At Point Function
 
+;; See: `org-link-completion-at-point' function.
+
 (defcustom org-link-completion-capf-type
   #'org-link-completion-capf-type-default
   "Function to complete link type part."
@@ -368,15 +370,6 @@ To use this, do the following in org-mode buffer:
           (org-link-completion-call capf)))))))
 
 
-;;;; Complete Link Unknown Type
-
-(defun org-link-completion-capf-path-unknown-type-default ()
-  (org-link-completion-capf-path-from-other-links))
-
-(defun org-link-completion-capf-desc-unknown-type-default ()
-  (org-link-completion-capf-desc-from-other-links))
-
-
 ;;;; Complete Link Type Part
 
 (defcustom org-link-completion-capf-type-default-collectors
@@ -413,9 +406,9 @@ part of link."
                   org-link-parameters)))
 
 
-;;;; Complete Untyped Link
+;;;; Complete Untyped Links
 
-;; Complete links without <type>: specification.
+;; Complete links without <type>: part.
 
 ;; `org-link-completion-capf-path-untyped-default'
 ;;
@@ -830,6 +823,122 @@ in coderef format."
   (format org-link-completion-default-coderef-description-format label))
 
 
+;;;; Complete Typed links
+
+;; Complete links with <type>: part.
+
+;;;;; Complete Unknown Type Link
+
+(defun org-link-completion-capf-path-unknown-type-default ()
+  (org-link-completion-capf-path-from-other-links))
+
+(defun org-link-completion-capf-desc-unknown-type-default ()
+  (org-link-completion-capf-desc-from-other-links))
+
+
+;;;;; Complete File Type Link
+
+;;;###autoload
+(defun org-link-completion-setup-type-file ()
+  (dolist (type '("file" "file+sys" "file+emacs"))
+    (org-link-set-parameters
+     type
+     :capf-path 'org-link-completion-capf-path-file
+     :capf-desc 'org-link-completion-capf-desc-file)))
+
+;;;###autoload
+(defun org-link-completion-capf-path-file ()
+  "Complete <filename> of [[<type>:<filename> at point.
+
+This function also works for `file+sys:' and `file+emacs:' link types.
+
+To enable this, call `org-lnk-completion-setup-type-file' function."
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (list
+     path-beg path-end
+     #'read-file-name-internal
+     :annotation-function
+     (lambda (str) (if (string-suffix-p "/" str) " Dir" " File"))
+     :company-kind
+     (lambda (str) (if (string-suffix-p "/" str) 'folder 'file))
+     :exclusive 'no)))
+
+;;;###autoload
+(defun org-link-completion-capf-desc-file ()
+  "Complete <filename> of [[<type>:<filename>][<description> at point."
+  (org-link-completion-parse-let :desc (desc-beg desc-end path desc)
+    (when (string-prefix-p desc path)
+      (list
+       desc-beg desc-end
+       (list path)
+       :company-kind (lambda (_) 'file)))))
+
+
+;;;; Complete From Other Links
+
+;; Complete path and description from those used in other links.
+
+;;;;; Complete Path from Other Links
+
+(defun org-link-completion-capf-path-from-other-links ()
+  "Complete the path at point from other links."
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (org-link-completion-capf-result
+     path-beg path-end
+     (org-link-completion-collect-path-from-other-links)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
+
+(defun org-link-completion-collect-path-from-other-links ()
+  (org-link-completion-parse-let nil (type-beg type-end)
+    (when (< type-beg type-end)
+      (save-excursion
+        (goto-char (point-min))
+        (let ((re (concat
+                   "\\[\\["
+                   (regexp-quote
+                    (buffer-substring-no-properties type-beg type-end))
+                   ":"
+                   "\\(\\(?:[^][\\]\\|\\\\[][\\]\\|\\\\[^][\\]\\)+\\)\\][][]"))
+              table)
+          (while (re-search-forward re nil t)
+            (unless (= (+ (match-beginning 0) 2) type-beg)
+              (let ((path (match-string-no-properties 1)))
+                (unless (member path table)
+                  (push path table)))))
+          table)))))
+
+
+;;;;; Complete Description from Other Links
+
+(defun org-link-completion-capf-desc-from-other-links ()
+  "Complete the description at point from other links."
+  (org-link-completion-parse-let :desc (desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-collect-description-from-other-links)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
+
+(defun org-link-completion-collect-description-from-other-links (&optional
+                                                                 link-beg
+                                                                 link-end)
+  (org-link-completion-parse-let nil (type-beg path-end)
+    (unless link-beg (setq link-beg type-beg))
+    (unless link-end (setq link-end path-end))
+    (when (< link-beg link-end)
+      (save-excursion
+        (goto-char (point-min))
+        (let ((re (concat "\\[\\["
+                          (regexp-quote
+                           (buffer-substring-no-properties link-beg link-end))
+                          "\\]\\["
+                          "\\(.*\\)\\]\\]")))
+          (cl-loop while (re-search-forward re nil t)
+                   unless (= (+ (match-beginning 0) 2) link-beg)
+                   collect (match-string-no-properties 1)))))))
+
+
 ;;;; Utilities for completion
 
 ;;;;; Completion Table
@@ -896,6 +1005,23 @@ in coderef format."
 (defun org-link-completion-annotation (str)
   (get-text-property 0 :org-link-completion-annotation str))
 
+;;;;; Retrieve From Org Document
+
+(defun org-link-completion-get-heading ()
+  "Return the heading of the current entry."
+  (when-let ((heading (org-get-heading t t t t)))
+    (substring-no-properties heading)))
+
+(defun org-link-completion-link-search (path)
+  "Move point to target of internal link PATH."
+  (ignore-errors
+    (if (eq org-link-search-must-match-exact-headline 'query-to-create)
+        ;; Suppress questions to users.
+        (let ((org-link-search-must-match-exact-headline nil))
+          (org-link-search path nil t))
+      (org-link-search path nil t))
+    t))
+
 ;;;;; Uncategorized
 
 (defun org-link-completion-call (fun)
@@ -924,10 +1050,6 @@ For example:
           (substring path 1 -1))
      path)))
 
-(defun org-link-completion-get-heading ()
-  (when-let ((heading (org-get-heading t t t t)))
-    (substring-no-properties heading)))
-
 
 (defconst org-link-completion-escape-description-separator
   ;; export snippets hack or zero width space
@@ -948,114 +1070,6 @@ For example:
             last (1+ curr)))
     (setq result (concat result (substring str last)))
     result))
-
-(defun org-link-completion-link-search (path)
-  (ignore-errors
-    (if (eq org-link-search-must-match-exact-headline 'query-to-create)
-        ;; Suppress questions to users.
-        (let ((org-link-search-must-match-exact-headline nil))
-          (org-link-search path nil t))
-      (org-link-search path nil t))
-    t))
-
-
-;;;; Complete Path from Other Links
-
-(defun org-link-completion-capf-path-from-other-links ()
-  "Complete the path at point from other links."
-  (org-link-completion-parse-let :path (path-beg path-end)
-    (org-link-completion-capf-result
-     path-beg path-end
-     (org-link-completion-collect-path-from-other-links)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
-
-(defun org-link-completion-collect-path-from-other-links ()
-  (org-link-completion-parse-let nil (type-beg type-end)
-    (when (< type-beg type-end)
-      (save-excursion
-        (goto-char (point-min))
-        (let ((re (concat
-                   "\\[\\["
-                   (regexp-quote
-                    (buffer-substring-no-properties type-beg type-end))
-                   ":"
-                   "\\(\\(?:[^][\\]\\|\\\\[][\\]\\|\\\\[^][\\]\\)+\\)\\][][]"))
-              table)
-          (while (re-search-forward re nil t)
-            (unless (= (+ (match-beginning 0) 2) type-beg)
-              (let ((path (match-string-no-properties 1)))
-                (unless (member path table)
-                  (push path table)))))
-          table)))))
-
-
-;;;; Complete Description from Other Links
-
-(defun org-link-completion-capf-desc-from-other-links ()
-  "Complete the description at point from other links."
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-collect-description-from-other-links)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
-
-(defun org-link-completion-collect-description-from-other-links (&optional
-                                                                 link-beg
-                                                                 link-end)
-  (org-link-completion-parse-let nil (type-beg path-end)
-    (unless link-beg (setq link-beg type-beg))
-    (unless link-end (setq link-end path-end))
-    (when (< link-beg link-end)
-      (save-excursion
-        (goto-char (point-min))
-        (let ((re (concat "\\[\\["
-                          (regexp-quote
-                           (buffer-substring-no-properties link-beg link-end))
-                          "\\]\\["
-                          "\\(.*\\)\\]\\]")))
-          (cl-loop while (re-search-forward re nil t)
-                   unless (= (+ (match-beginning 0) 2) link-beg)
-                   collect (match-string-no-properties 1)))))))
-
-
-;;;; Complete File Type Link
-
-;;;###autoload
-(defun org-link-completion-setup-type-file ()
-  (dolist (type '("file" "file+sys" "file+emacs"))
-    (org-link-set-parameters
-     type
-     :capf-path 'org-link-completion-capf-path-file
-     :capf-desc 'org-link-completion-capf-desc-file)))
-
-;;;###autoload
-(defun org-link-completion-capf-path-file ()
-  "Complete <filename> of [[<type>:<filename> at point.
-
-This function also works for `file+sys:' and `file+emacs:' link types.
-
-To enable this, call `org-lnk-completion-setup-type-file' function."
-  (org-link-completion-parse-let :path (path-beg path-end)
-    (list
-     path-beg path-end
-     #'read-file-name-internal
-     :annotation-function
-     (lambda (str) (if (string-suffix-p "/" str) " Dir" " File"))
-     :company-kind
-     (lambda (str) (if (string-suffix-p "/" str) 'folder 'file))
-     :exclusive 'no)))
-
-;;;###autoload
-(defun org-link-completion-capf-desc-file ()
-  "Complete <filename> of [[<type>:<filename>][<description> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end path desc)
-    (when (string-prefix-p desc path)
-      (list
-       desc-beg desc-end
-       (list path)
-       :company-kind (lambda (_) 'file)))))
 
 
 (provide 'org-link-completion)
