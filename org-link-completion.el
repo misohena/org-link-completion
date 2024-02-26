@@ -735,7 +735,7 @@ in custom-id format."
      :annotation-function #'org-link-completion-annotation)))
 
 (defun org-link-completion-collect-custom-id-desc-from-around-target ()
-  (org-link-completion-parse-let nil (path)
+  (org-link-completion-parse-let :desc (path)
     ;; Extract from target location
     (save-excursion
       (delq nil
@@ -785,7 +785,7 @@ in search target format."
      :annotation-function #'org-link-completion-annotation)))
 
 (defun org-link-completion-collect-search-desc-from-around-target ()
-  (org-link-completion-parse-let nil (path)
+  (org-link-completion-parse-let :desc (path)
     ;; Extract from target location
     (save-excursion
       (let ((table))
@@ -843,7 +843,7 @@ in coderef format."
      :annotation-function #'org-link-completion-annotation)))
 
 (defun org-link-completion-collect-coderef-desc-from-around-target ()
-  (org-link-completion-parse-let nil (path)
+  (org-link-completion-parse-let :desc (path)
     ;; Extract from target location
     (save-excursion
       (let (table)
@@ -875,7 +875,7 @@ in coderef format."
 
 (defun org-link-completion-collect-default-coderef-description ()
   "Line (<coderef>)"
-  (org-link-completion-parse-let nil (path) ;; "(<coderef>)" format
+  (org-link-completion-parse-let :desc (path) ;; "(<coderef>)" format
     (list (org-link-completion-default-coderef-description path))))
 
 (defconst org-link-completion-default-coderef-description-format-dictionary
@@ -996,7 +996,7 @@ To enable this, call `org-lnk-completion-setup-type-file' function."
 (defun org-link-completion-collect-description-from-other-links (&optional
                                                                  link-beg
                                                                  link-end)
-  (org-link-completion-parse-let nil (type-beg path-end)
+  (org-link-completion-parse-let :desc (type-beg path-end)
     (unless link-beg (setq link-beg type-beg))
     (unless link-end (setq link-end path-end))
     (when (< link-beg link-end)
@@ -1084,12 +1084,12 @@ and simply return nil."
 (defun org-link-completion-collect-stripped-internal-link-path ()
   "Collect a string with internal link symbols removed from the
  path of the link at point."
-  (org-link-completion-parse-let nil (path)
+  (org-link-completion-parse-let :desc (path)
     (list (org-link-completion-strip-internal-link path))))
 
 (defun org-link-completion-collect-path ()
   "Collect a path of the link at point."
-  (org-link-completion-parse-let nil (path)
+  (org-link-completion-parse-let :desc (path)
     (list path)))
 
 ;;;;; Propertize

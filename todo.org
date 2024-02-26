@@ -119,3 +119,11 @@ c:の後に/や\を許容するか、大人しく[[elisp-function:file-name-abso
   ~[[unknowntype~ はこれまで通りtypeだが、 ~[[unknowntype:foobar~ の ~unknowntype:~ 部分はタイプではなく内部リンク(の一部)になる。カスタマイズ変数があっても良い。
 - [[elisp-function:org-link-completion-untyped-link-kind]] は[[elisp-function:file-name-absolute-p][file-name-absolute-p]]を使うべき。
   ~ ~USERID ~USERID/* ~USERID\* ~/* ~\* /* \* c:/* c:\* だけがファイルパスになる。
+** DONE parse-letのwhereにnilを指定しているところを出来るだけ無くす
+CLOSED: [2024-02-26 Mon 22:33]
+path-begやpath-endがnilの場所(つまりwhere=type)でpathを参照するとbuffer-substring-no-propertiesがエラーを出すはず。後からチェックできないので危険。
+
+論理的に考えて、説明部分でしか使わないはず。
+pathから得られる情報を使ってpathやtypeを書き替えるわけがない。
+
+ただ一つ例外は[[elisp-function:org-link-completion-collect-path-from-other-links]]。これはtypeによってpathを補完するから。typeは必ず存在するので問題なし。
