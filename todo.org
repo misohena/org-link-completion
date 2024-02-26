@@ -35,15 +35,13 @@ org-fontify-meta-lines-and-blocks-1でのやり方と一致していれば問題
 
 空のファイル名は現在のファイルを検索する。[[file:::fileタイプで]] [[fileタイプで]] どちらでも良い。
 
-** TODO ファイル名の説明部分を補完する
-補完候補:
-- orgファイルの場合はTITLE
-- htmlファイルの場合はtitle要素
-- 拡張子を除いたベース名だけ
-- ファイル名だけ
-- 絶対パス
+** TODO htmlファイルのタイトルを補完する
+** TODO httpやhttpsでタイトルを補完する
+http、https経由でhtmlやorgファイルをダウンロードしてファイルと同じように解析する。
+さすがにやり過ぎなのでデフォルトで無効にする？
 
 ** TODO idタイプを補完できるか検討する
+** TODO 空文字列の候補を出すところがあるかもしれないのでチェックする
 * Finished
 ** DONE 「#」で始まる内部リンクを補完する(customid)
 CLOSED: [2024-02-24 Sat 13:30]
@@ -127,3 +125,12 @@ path-begやpath-endがnilの場所(つまりwhere=type)でpathを参照すると
 pathから得られる情報を使ってpathやtypeを書き替えるわけがない。
 
 ただ一つ例外は[[elisp-function:org-link-completion-collect-path-from-other-links]]。これはtypeによってpathを補完するから。typeは必ず存在するので問題なし。
+** DONE ファイル名の説明部分を補完する
+CLOSED: [2024-02-26 Mon 22:40]
+補完候補:
+- orgファイルの場合はTITLE
+- ファイル名だけ
+- 拡張子を除いたベース名だけ
+- 絶対パス
+- +htmlファイルの場合はtitle要素+ これはまた後で。
+

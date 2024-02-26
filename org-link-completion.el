@@ -936,15 +936,97 @@ To enable this, call `org-lnk-completion-setup-type-file' function."
      (lambda (str) (if (string-suffix-p "/" str) 'folder 'file))
      :exclusive 'no)))
 
+(defcustom org-link-completion-desc-file-collectors
+  '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-org-file-title
+    ;; TODO: Get titles from more file formats
+    org-link-completion-collect-file-name
+    org-link-completion-collect-file-base
+    org-link-completion-collect-path
+    org-link-completion-collect-file-full-path)
+  "List of functions that collect description completion candidates
+in file link."
+  :group 'org-link-completion-functions
+  :type '(repeat (function)))
+
 ;;;###autoload
 (defun org-link-completion-desc-file ()
   "Complete <filename> of [[<type>:<filename>][<description> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end path desc)
-    (when (string-prefix-p desc path)
-      (list
-       desc-beg desc-end
-       (list path)
-       :company-kind (lambda (_) 'file)))))
+  (org-link-completion-parse-let :desc (desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-call-collectors
+      org-link-completion-desc-file-collectors)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
+
+(defun org-link-completion-file-path-part (path)
+  (org-link-completion-file-non-empty
+   (org-link-completion-file-without-options path)))
+
+(defun org-link-completion-file-without-options (path)
+  ;; Find first `::' (See: `org-link-open-as-file')
+  (if (string-match "\\`\\(.*?\\)::" path)
+      (match-string 1 path)
+    path))
+
+(defun org-link-completion-file-non-empty (path)
+  (if (string-empty-p path)
+      (buffer-file-name)
+    path))
+
+(defun org-link-completion-collect-file-name ()
+  (org-link-completion-parse-let :desc (path)
+    (when-let ((filepath (org-link-completion-file-path-part path)))
+      (list (file-name-nondirectory filepath)))))
+
+(defun org-link-completion-collect-file-base ()
+  (org-link-completion-parse-let :desc (path)
+    (when-let ((filepath (org-link-completion-file-path-part path)))
+      (list (let ((filename (file-name-nondirectory filepath)))
+              (if (string-match "\\`\\([^.]*\\)" filename)
+                  (match-string 1 filename)
+                filename))))))
+
+(defun org-link-completion-collect-file-full-path ()
+  (org-link-completion-parse-let :desc (path)
+    (when-let ((filepath (org-link-completion-file-path-part path)))
+      (list (expand-file-name filepath)))))
+
+(defun org-link-completion-collect-org-file-title ()
+  (org-link-completion-parse-let :desc (path)
+    (ignore-errors
+      (let ((title
+             (if-let ((filepath (org-link-completion-file-path-part path)))
+                 (when (and (string-match-p "\\.org\\'" filepath)
+                            (file-regular-p filepath))
+                   (if-let ((buffer (get-file-buffer filepath)))
+                       ;; From buffer
+                       (with-current-buffer buffer
+                         (org-link-completion-get-org-title))
+                     ;; From file directly
+                     (with-temp-buffer
+                       (insert-file-contents filepath nil nil
+                                             ;; It's probably near the top :)
+                                             ;; TODO: Customize
+                                             16384)
+                       (org-link-completion-get-org-title))))
+               ;; From current buffer
+               (when (derived-mode-p 'org-mode)
+                 (org-link-completion-get-org-title)))))
+        (when title
+          (list title))))))
+
+(defun org-link-completion-get-org-title ()
+  "Read org-mode title from Current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (let ((case-fold-search t))
+      (when (re-search-forward
+             "^#\\+TITLE: *\\(.*\\)$" nil t)
+        (let ((title (match-string-no-properties 1)))
+          (unless (string-empty-p title)
+            title))))))
 
 
 ;;;; Complete From Other Links
