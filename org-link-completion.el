@@ -56,136 +56,174 @@
 
 ;;;; Parse Link At Point
 
-;; [[My Target]
-;; [[*heading]
+;; Without type:
 ;; [[#my-custom-id]
+;; [[*heading]
+;; [[(jump)   (See: https://orgmode.org/manual/Literal-Examples.html)
+;; [[(jump)][Line (jump)
+;; [[mytarget
+;; [[My Target]
+;; [[./dir/file]
+;; [[../dir/file]
+;; [[/]
+;; [[\]
+;; [[/dir/file]
+;; [[\dir\file]
+;; [[~/.emacs.d/]
+;; [[~\.emacs.d/]
+;; [[~USER/file]
+;; [[~USER\file]
+;; [[~USER]
+;; [[~]
+;; [[c:/
+;; [[c:\
+;;
+;; With type:
+;; [[unfinishedtype
+;; [[type:<path>]
 ;; [[file:test.org
 ;; [[file:/dir/file]
 ;; [[file:README.org::library]
 ;; [[file:README.org::*Setup]
 ;; [[file:README.org::#custom-id]
-;; [[/dir/file]
-;; [[./dir/file]
-;; [[~/.emacs.d/]
-;; [[c:/home/
-;; [[type:<path>]
+
+;;
 ;; [[\[<type>:<path>\]][escape sequence
 ;; [[^#\\\\+TITLE][escape sequence
 ;; [[My Target][description[multiple[bracket]bracket]bracket]]
-;; [[(jump)   (See: https://orgmode.org/manual/Literal-Examples.html)
-;; [[(jump)][Line (jump)
 ;; [[    ][
 ;; [[    ][  ]]
 ;; [[    ][  ][   ][   ]]
+
+;; Not supported:
 ;; [[type:path][foofoofoo[[foofofofof[[fofof]] <= Unable to parse correctly
 ;; [[My
 ;; Target]] <= Not supported
-;;
+
 ;; Invalid Syntax:
 ;; [[My Target\][description]]
 ;; [[My [Target][description]]
 ;; [[My ]Target][description]]
 
+(defcustom org-link-completion-accept-undefined-type nil
+  "Non-nil means that the completed link type is treated as a link
+type even if it is not registered in org-link-parameters.
 
-(defconst org-link-completion-type-chars "-A-Za-z0-9_+")
+For example, in the notation [[undefinedtype:foobar], this option
+changes whether the part before the colon becomes the link type
+or the target string of an internal link."
+  :group 'org-link-completion
+  :type 'boolean)
 
 (defun org-link-completion-parse-at-point ()
   "Return a list in the following format:
   (WHERE TYPE-BEG TYPE-END [ PATH-BEG PATH-END [ DESC-BEG DESC-END ] ])"
   (save-excursion
-    (let ((origin (point))
-          type-beg type-end type-sep
-          path-beg path-end
-          desc-beg desc-end)
-      ;; Search back [[ and record location of ][
-      (while (progn
-               (skip-chars-backward "^\n][")
-               (pcase (char-before)
-                 (?\[ (pcase (char-before (1- (point)))
-                        ;; ][ => record & skip
-                        (?\] (setq desc-beg (point)) (backward-char 2) t)
-                        ;; [[ => stop
-                        (?\[ (setq type-beg (point)) nil)
-                        ;; ?[ => skip
-                        (_   (backward-char) t)))
-                 (?\] (if (or (eq (char-before (1- (point))) ?\])
-                              (eq (char-after (point)) ?\]))
-                          ;; ]] => stop
-                          nil
-                        ;; ?] => skip
-                        (backward-char)
-                        t))
-                 ;; \n or nil => stop
-                 (_   nil))))
-      (when type-beg ;; [[ not \] \n nil
-        (setq type-end (progn
-                         (skip-chars-forward org-link-completion-type-chars)
-                         (point))
-              type-sep (eq (char-after) ?:)
-              path-end (progn
-                         ;; Skip escape sequence \\ \] \[ or not \ ] [ \n
-                         (while (progn
-                                  (skip-chars-forward "^\n][\\\\")
-                                  (when (eq (char-after) ?\\)
-                                    (forward-char)
-                                    (when (memq (char-after)
-                                                '(?\\ ?\[ ?\]))
-                                      (forward-char))
-                                    t)))
-                         (point)))
+    (let* ((origin (point))
+           ;; Search back [[ and record location of ][
+           (type-desc-beg (org-link-completion-search-back-beginning-of-link))
+           (type-beg (car type-desc-beg))
+           (desc-beg (cdr type-desc-beg)))
+      (when type-beg ;; [[ was found
+        (let ((type-end-maybe (org-link-completion-search-forward-end-of-type)))
+          (if (<= origin type-end-maybe)
+              ;; [[<type>
+              (list 'type type-beg type-end-maybe)
+            ;; After writing <type>
+            (let* ((path-end (org-link-completion-search-forward-end-of-path))
+                   (type-colon-end
+                    (if org-link-completion-accept-undefined-type
+                        ;; Followed by a colon?
+                        (and (eq (char-after type-end-maybe) ?:)
+                             (1+ (point)))
+                      ;; Defined in `org-link-parameters'?
+                      (save-match-data
+                        (when (string-match org-link-types-re
+                                            (buffer-substring-no-properties
+                                             type-beg path-end))
+                          (+ type-beg (match-end 0))))))
+                   (type-end (if type-colon-end (1- type-colon-end) type-beg))
+                   (path-beg (if type-colon-end type-colon-end type-beg)))
 
-        ;; c in c:/ is not a type
-        (when (and type-sep
-                   (= (- type-end type-beg) 1)
-                   (let ((ch (char-after type-beg)))
-                     (or (<= ?a ch ?z) (<= ?A ch ?Z))))
-          (setq type-end type-beg
-                type-sep nil))
+              (cond
+               ;; [[<type>:<path>
+               ;; [[#customid
+               ;; [[*heading
+               ;; [[/home/test.org
+               ;; [[My Target
+               ((<= origin path-end) (list 'path type-beg type-end path-beg path-end))
+               ;; [[<type>:<path>]
+               ((null desc-beg) nil)
+               ;; Reject invalid syntax [[path\][desc , [[pa[th][desc, [[pa]th][desc
+               ((/= (- desc-beg 2) path-end) nil)
+               ;; [[<type>:<path>][
+               (t
+                ;; Find ]] or \n
+                (goto-char desc-beg)
+                (let ((desc-end
+                       (org-link-completion-search-forward-end-of-desc)))
+                  ;; [[<type>:<path>][<description>
+                  (when (<= origin desc-end)
+                    (list 'desc type-beg type-end path-beg path-end desc-beg desc-end)
+                    )))))))))))
 
-        ;; `::' is not a type separator
-        (when (and type-sep
-                   (eq (char-after (1+ type-end)) ?:))
-          (setq type-end type-beg
-                type-sep nil))
+(defun org-link-completion-search-back-beginning-of-link ()
+  "Search back `[[' and `]['.
+Return a cons cell containing the positions of `[[' and `]]'.
+The search stops when it reaches `[[', `]]', `\n' or BOB.
+A nil is placed in the position that has not been found so far."
+  (let (type-beg desc-beg)
+    (while (progn
+             (skip-chars-backward "^\n][")
+             (pcase (char-before)
+               (?\[ (pcase (char-before (1- (point)))
+                      ;; ][ => record & skip
+                      (?\] (setq desc-beg (point)) (backward-char 2) t)
+                      ;; [[ => stop
+                      (?\[ (setq type-beg (point)) nil)
+                      ;; ?[ => skip
+                      (_   (backward-char) t)))
+               (?\] (if (or (eq (char-before (1- (point))) ?\])
+                            (eq (char-after (point)) ?\]))
+                        ;; ]] => stop
+                        nil
+                      ;; ?] => skip
+                      (backward-char)
+                      t))
+               ;; \n or nil => stop
+               (_   nil))))
+    (cons type-beg desc-beg)))
 
-        ;; No type separator
-        (when (and (< type-end origin)
-                   (not type-sep))
-          (setq type-end type-beg))
+(defconst org-link-completion-type-chars "-A-Za-z0-9_+")
 
-        ;; Beginning of path part
-        (setq path-beg (+ type-end (if type-sep 1 0)))
+(defun org-link-completion-search-forward-end-of-type ()
+  (skip-chars-forward
+   org-link-completion-type-chars)
+  (point))
 
-        (cond
-         ;; [[<type>
-         ((<= origin type-end) (list 'type type-beg type-end))
-         ;; [[<type>:<path>
-         ;; [[#customid
-         ;; [[*heading
-         ;; [[/home/test.org
-         ;; [[My Target
-         ((<= origin path-end) (list 'path type-beg type-end path-beg path-end))
-         ;; [[<type>:<path>]
-         ((null desc-beg) nil)
-         ;; Reject invalid syntax [[path\][desc , [[pa[th][desc, [[pa]th][desc
-         ((/= (- desc-beg 2) path-end) nil)
-         ;; [[<type>:<path>][
-         (t
-          ;; Find ]] or \n
-          (goto-char desc-beg)
-          (setq desc-end
-                (progn
-                  (while (progn
-                           (skip-chars-forward "^]\n")
-                           (when (and (eq (char-after) ?\])
-                                      (not (eq (char-after (1+ (point))) ?\])))
-                             (forward-char)
-                             t)))
-                  (point)))
-          ;; [[<type>:<path>][<description>
-          (when (<= origin desc-end)
-            (list 'desc type-beg type-end path-beg path-end desc-beg desc-end)
-            )))))))
+(defun org-link-completion-search-forward-end-of-path ()
+  ;; Search forward ]
+  ;; Skip escape sequence \\ \] \[ or not \ ] [ \n
+  (while (progn
+           (skip-chars-forward "^\n][\\\\")
+           (when (eq (char-after) ?\\)
+             (forward-char)
+             (when (memq (char-after)
+                         '(?\\ ?\[ ?\]))
+               (forward-char))
+             t)))
+  (point))
+
+(defun org-link-completion-search-forward-end-of-desc ()
+  ;; Find ]] or \n
+  (while (progn
+           (skip-chars-forward "^]\n")
+           (when (and (eq (char-after) ?\])
+                      (not (eq (char-after (1+ (point))) ?\])))
+             (forward-char)
+             t)))
+  (point))
+
 
 (defvar org-link-completion-pos nil
   "Temporarily hold result of `org-link-completion-parse-at-point'
@@ -442,15 +480,22 @@ part of link."
       ;; (<coderef>)
       (?\( 'coderef)
       ;; <file>
-      ((or ?/ ?. ?~
-           ;; Drive letter (c:)
-           (pred (lambda (ch)
-                   (and (or (<= ?a ch ?z) (<= ?A ch ?Z))
-                        (eq (char-after (1+ beg)) ?:)))))
-       'file)
-      ;; <target>
+      ;; See: `org-element-link-parser'
+      ;; Relative path: ./ ../  (Not a path: . .. .\ ..\)
+      (?.
+       (if (pcase (char-after (1+ beg))
+             (?/ t)
+             (?. (eq (char-after (+ 2 beg)) ?/)))
+           'file
+         'search))
       (_
-       'search))))
+       ;; Absolute path: /* ~/* ~<user>/* ~ ~<user>
+       ;;  (MS-Windows): \* ~\* ~<user>\* <drive>:/* <drive>:\*
+       ;; TODO: Add customization variable to select platform.
+       (if (file-name-absolute-p (buffer-substring-no-properties beg end))
+           'file
+         ;; <target>
+         'search)))))
 
 ;;;;; Untyped Path
 

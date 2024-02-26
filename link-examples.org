@@ -7,30 +7,58 @@
 :END:
 
 - Internal Links
-  - [[
-  - [[Apple][Apple
-  - [[Ap
-  - [[Apricot][
-  - [[Orange][
-  - [[Danraku][
-  - [[My
-  - [[My Target][
-  - [[Unknown Target][
-  - [[*
-  - [[*Target Example][
-  - [[#
-  - [[#custom-id-example-1][
-  - [[(
-  - [[(back)][
-  - [[(back2)][
-  - [[(hello-world)]["Hello, \\[[World]@@-:@@]// !!"))]]  (Export Snippet Hack)
+  - Custom ID
+    - [[#
+    - [[#custom-id-example-1][
+  - Heading
+    - [[*
+    - [[*Target Example][
+  - Coderef
+    - [[(
+    - [[(back)][
+    - [[(back2)][
+    - [[(hello-world)]["Hello, \\[[World]@@-:@@]// !!"))]]  (Export Snippet Hack)
+  - Search
+    - [[
+    - [[Apple][Apple
+    - [[Ap
+    - [[Apricot][
+    - [[Orange][
+    - [[Danraku][
+    - [[My
+    - [[My Target][
+    - [[Unknown Target][
+    - [[neverusedtypename:
+    - [[neverusedtypename:foobar]]
 - External Links
-  - [[/dir/file][
-  - [[./R
-  - [[~/.emacs.d/]
-  - [[c:/home/
-  - [[../org-link-completion/
-  - [[../org-link-completion/README.org][
+  - Relative Path
+    - [[./
+    - [[./li
+    - [[../
+    - [[../][
+    - [[../org-link-completion/
+    - [[../org-link-completion/README.org][
+  - Absolute Path
+    - [[/
+    - [[\
+    - [[/home/][
+    - [[\Users\
+    - [[~
+    - [[~USER
+    - [[~USER/
+    - [[~USER\
+    - [[~/.emacs.d/]
+    - [[~\.emacs.d/]
+    - [[c:/home/
+    - [[c:\home\
+  - Not a Path
+    - [[README.org
+    - [[.
+    - [[..
+    - [[.\li
+    - [[..\org
+    - [[c:
+    - [[c:home
 
 * Typed Link
 :PROPERTIES:
@@ -48,8 +76,9 @@
   - [[file:README.org::#custom-id-example-2
   - [[file:::*Link Target
 - https
-  - [[https://
+  - [[https:
   - [[https://misohena.jp/blog/2024-02-23-org-link-completion-el.html][
+  - [[https://misohena.jp/blog/]]
 
 * Unsupported
 - Outside Text
