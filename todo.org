@@ -41,8 +41,10 @@ http、https経由でhtmlやorgファイルをダウンロードしてファイ�
 さすがにやり過ぎなのでデフォルトで無効にする？
 
 ** TODO idタイプを補完できるか検討する
-** TODO 空文字列の候補を出すところがあるかもしれないのでチェックする
-いくつか直したがまだ残っているかも。
+** TODO fileの説明部分などで重複が発生しているのをどうするか
+直す？　アノテーションを付けるなら重複していても仕方ないかもしれないけど。
+** TODO fileの説明部分の補完などでアノテーションを付ける
+どこから持ってきたテキストなのか分かりづらい。
 * Finished
 ** DONE 「#」で始まる内部リンクを補完する(customid)
 CLOSED: [2024-02-24 Sat 13:30]
@@ -140,3 +142,6 @@ CLOSED: [2024-02-26 Mon 22:50]
 - org-link-completion-collect-stripped-internal-link-path (記号を取り除いたパス)
 - org-link-completion-collect-path (パスそのもの)
 - org-link-completion-get-heading (見出し)
+** DONE 空文字列の候補を出すところがあるかもしれないのでチェックする
+CLOSED: [2024-02-26 Mon 23:47]
+いくつか直したがまだ残っているかも。

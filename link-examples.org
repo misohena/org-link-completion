@@ -30,6 +30,7 @@
     - [[Unknown Target][
     - [[neverusedtypename:
     - [[neverusedtypename:foobar]]
+    - [[.emacs][
 - External Links
   - Relative Path
     - [[./
@@ -75,6 +76,9 @@
   - [[file:README.org::*Setup]
   - [[file:README.org::#custom-id-example-2
   - [[file:::*Link Target
+  - [[file:.emacs][
+  - [[file:][
+  - [[file:::*Link Target][
 - https
   - [[https:
   - [[https://misohena.jp/blog/2024-02-23-org-link-completion-el.html][
