@@ -1194,7 +1194,7 @@ and simply return nil."
   (ignore-errors
     (if (eq org-link-search-must-match-exact-headline 'query-to-create)
         ;; Suppress questions to users.
-        (let ((org-link-search-must-match-exact-headline nil))
+        (let ((org-link-search-must-match-exact-headline t))
           (org-link-search path nil t))
       (org-link-search path nil t))
     t))
