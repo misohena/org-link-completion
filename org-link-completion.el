@@ -1088,7 +1088,7 @@ in file link."
                           (regexp-quote
                            (buffer-substring-no-properties link-beg link-end))
                           "\\]\\["
-                          "\\(.*\\)\\]\\]")))
+                          "\\(.+\\)\\]\\]"))) ;; One or more chars
           (cl-loop while (re-search-forward re nil t)
                    unless (= (+ (match-beginning 0) 2) link-beg)
                    collect (match-string-no-properties 1)))))))
@@ -1167,12 +1167,15 @@ and simply return nil."
   "Collect a string with internal link symbols removed from the
  path of the link at point."
   (org-link-completion-parse-let :desc (path)
-    (list (org-link-completion-strip-internal-link path))))
+    (let ((text (org-link-completion-strip-internal-link path)))
+      (unless (string-empty-p text)
+        (list text)))))
 
 (defun org-link-completion-collect-path ()
   "Collect a path of the link at point."
   (org-link-completion-parse-let :desc (path)
-    (list path)))
+    (unless (string-empty-p path)
+      (list path))))
 
 ;;;;; Propertize
 
@@ -1186,8 +1189,10 @@ and simply return nil."
 
 (defun org-link-completion-get-heading ()
   "Return the heading of the current entry."
-  (when-let ((heading (org-get-heading t t t t)))
-    (substring-no-properties heading)))
+  (let ((heading (org-get-heading t t t t)))
+    (when (and heading
+               (not (string-empty-p heading)))
+      (substring-no-properties heading))))
 
 (defun org-link-completion-link-search (path)
   "Move point to target of internal link PATH."

@@ -42,6 +42,7 @@ http、https経由でhtmlやorgファイルをダウンロードしてファイ�
 
 ** TODO idタイプを補完できるか検討する
 ** TODO 空文字列の候補を出すところがあるかもしれないのでチェックする
+いくつか直したがまだ残っているかも。
 * Finished
 ** DONE 「#」で始まる内部リンクを補完する(customid)
 CLOSED: [2024-02-24 Sat 13:30]
@@ -133,4 +134,9 @@ CLOSED: [2024-02-26 Mon 22:40]
 - 拡張子を除いたベース名だけ
 - 絶対パス
 - +htmlファイルの場合はtitle要素+ これはまた後で。
-
+** DONE 空文字列の候補を出すところをいくつか直す
+CLOSED: [2024-02-26 Mon 22:50]
+- org-link-completion-collect-description-from-other-links (他のdescription)
+- org-link-completion-collect-stripped-internal-link-path (記号を取り除いたパス)
+- org-link-completion-collect-path (パスそのもの)
+- org-link-completion-get-heading (見出し)
