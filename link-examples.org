@@ -10,9 +10,11 @@
   - Custom ID
     - [[#
     - [[#custom-id-example-1][
+    - [[#custom-id-example-1][Custom ID Example 1]]
   - Heading
     - [[*
     - [[*Target Example][
+    - [[*Target Example][Target Example Section]]
   - Coderef
     - [[(
     - [[(back)][
@@ -20,9 +22,10 @@
     - [[(hello-world)]["Hello, \\[[World]@@-:@@]// !!"))]]  (Export Snippet Hack)
   - Search
     - [[
-    - [[Apple][Apple
+    - [[Apple][
+    - [[Apple][--Apple--]]
     - [[Ap
-    - [[Apricot][
+    - [[Apricot][Tab
     - [[Orange][
     - [[Danraku][
     - [[My

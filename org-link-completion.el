@@ -803,20 +803,22 @@ in search target format."
 
 (defun org-link-completion-collect-search-desc-from-current-line ()
   (org-link-completion-string-list
-   (org-link-completion-escape-description-string
-    (string-trim
-     ;; Remove <<...>> not <<<...>>>.
-     (replace-regexp-in-string
-      (concat "\\(?:[^<]\\|^\\)\\("
-              org-target-regexp
-              "\\)\\(?:[^>]\\|$\\)")
-      ""
-      (buffer-substring-no-properties (line-beginning-position)
-                                      (line-end-position))
-      nil nil 1)
-     ;; Strip bullets and table separators
-     "\\(?:[ \t\n\r]*[|-]\\)*[ \t]*"
-     "\\(?:[ \t]*|\\)*[ \t]*"))))
+   (org-link-completion-annotate
+    (org-link-completion-escape-description-string
+     (string-trim
+      ;; Remove <<...>> not <<<...>>>.
+      (replace-regexp-in-string
+       (concat "\\(?:[^<]\\|^\\)\\("
+               org-target-regexp
+               "\\)\\(?:[^>]\\|$\\)")
+       ""
+       (buffer-substring-no-properties (line-beginning-position)
+                                       (line-end-position))
+       nil nil 1)
+      ;; Strip bullets and table separators
+      "\\(?:[ \t\n\r]*[|-]\\)*[ \t]*"
+      "\\(?:[ \t]*|\\)*[ \t]*"))
+    "Line")))
 
 ;;;;;; Coderef Description
 
@@ -861,21 +863,25 @@ in coderef format."
 
 (defun org-link-completion-collect-coderef-desc-from-current-line ()
   (org-link-completion-string-list
-   (org-link-completion-escape-description-string
-    (string-trim
-     ;; Remove coderef target from the line.
-     (replace-regexp-in-string
-      (org-src-coderef-regexp (org-src-coderef-format
-                               (org-element-at-point)))
-      ""
-      (buffer-substring-no-properties (line-beginning-position)
-                                      (line-end-position)))))))
+   (org-link-completion-annotate
+    (org-link-completion-escape-description-string
+     (string-trim
+      ;; Remove coderef target from the line.
+      (replace-regexp-in-string
+       (org-src-coderef-regexp (org-src-coderef-format
+                                (org-element-at-point)))
+       ""
+       (buffer-substring-no-properties (line-beginning-position)
+                                       (line-end-position)))))
+    "Line")))
 
 (defun org-link-completion-collect-default-coderef-description ()
   "Line (<coderef>)"
   (org-link-completion-parse-let :desc (path) ;; "(<coderef>)" format
     (org-link-completion-string-list
-     (org-link-completion-default-coderef-description path))))
+     (org-link-completion-annotate
+      (org-link-completion-default-coderef-description path)
+      "Format"))))
 
 (defconst org-link-completion-default-coderef-description-format-dictionary
   '(("Japanese" . "%s行目")))
@@ -978,7 +984,9 @@ in file link."
   (org-link-completion-parse-let :desc (path)
     (when-let ((filepath (org-link-completion-file-path-part path)))
       (org-link-completion-string-list
-       (file-name-nondirectory filepath)))))
+       (org-link-completion-annotate
+        (file-name-nondirectory filepath)
+        "File Name")))))
 
 (defun org-link-completion-collect-file-base ()
   (org-link-completion-parse-let :desc (path)
@@ -986,35 +994,41 @@ in file link."
       (let ((filename (file-name-nondirectory filepath)))
         (when (string-match "\\`\\(.[^.]*\\)" filename)
           (org-link-completion-string-list
-           (match-string 1 filename)))))))
+           (org-link-completion-annotate
+            (match-string 1 filename)
+            "Base Name")))))))
 
 (defun org-link-completion-collect-file-full-path ()
   (org-link-completion-parse-let :desc (path)
     (when-let ((filepath (org-link-completion-file-path-part path)))
       (org-link-completion-string-list
-       (expand-file-name filepath)))))
+       (org-link-completion-annotate
+        (expand-file-name filepath)
+        "Full Path")))))
 
 (defun org-link-completion-collect-org-file-title ()
   (org-link-completion-parse-let :desc (path)
     (ignore-errors
       (org-link-completion-string-list
-       (if-let ((filepath (org-link-completion-file-path-part path)))
-           (when (and (string-match-p "\\.org\\'" filepath)
-                      (file-regular-p filepath))
-             (if-let ((buffer (get-file-buffer filepath)))
-                 ;; From buffer
-                 (with-current-buffer buffer
-                   (org-link-completion-get-org-title))
-               ;; From file directly
-               (with-temp-buffer
-                 (insert-file-contents filepath nil nil
-                                       ;; It's probably near the top
-                                       ;; TODO: Customize
-                                       16384)
-                 (org-link-completion-get-org-title))))
-         ;; From current buffer
-         (when (derived-mode-p 'org-mode)
-           (org-link-completion-get-org-title)))))))
+       (org-link-completion-annotate
+        (if-let ((filepath (org-link-completion-file-path-part path)))
+            (when (and (string-match-p "\\.org\\'" filepath)
+                       (file-regular-p filepath))
+              (if-let ((buffer (get-file-buffer filepath)))
+                  ;; From buffer
+                  (with-current-buffer buffer
+                    (org-link-completion-get-org-title))
+                ;; From file directly
+                (with-temp-buffer
+                  (insert-file-contents filepath nil nil
+                                        ;; It's probably near the top
+                                        ;; TODO: Customize
+                                        16384)
+                  (org-link-completion-get-org-title))))
+          ;; From current buffer
+          (when (derived-mode-p 'org-mode)
+            (org-link-completion-get-org-title)))
+        "Title")))))
 
 (defun org-link-completion-get-org-title ()
   "Read org-mode title from Current buffer."
@@ -1088,7 +1102,9 @@ in file link."
                           "\\(.+\\)\\]\\]"))) ;; One or more chars
           (cl-loop while (re-search-forward re nil t)
                    unless (= (+ (match-beginning 0) 2) link-beg)
-                   collect (match-string-no-properties 1)))))))
+                   collect (org-link-completion-annotate
+                            (match-string-no-properties 1)
+                            "Others")))))))
 
 
 ;;;; Utilities for completion
@@ -1165,17 +1181,21 @@ and simply return nil."
  path of the link at point."
   (org-link-completion-parse-let :desc (path)
     (org-link-completion-string-list
-     (org-link-completion-strip-internal-link path))))
+     (org-link-completion-annotate
+      (org-link-completion-strip-internal-link path)
+      "Path"))))
 
 (defun org-link-completion-collect-path ()
   "Collect a path of the link at point."
   (org-link-completion-parse-let :desc (path)
-    (org-link-completion-string-list path)))
+    (org-link-completion-string-list
+     (org-link-completion-annotate path "Path"))))
 
 ;;;;; Propertize
 
 (defun org-link-completion-annotate (str annotation)
-  (propertize str :org-link-completion-annotation annotation))
+  (when (and str annotation)
+    (propertize str :org-link-completion-annotation annotation)))
 
 (defun org-link-completion-annotation (str)
   (get-text-property 0 :org-link-completion-annotation str))
@@ -1187,7 +1207,9 @@ and simply return nil."
   (let ((heading (org-get-heading t t t t)))
     (when (and heading
                (not (string-empty-p heading)))
-      (substring-no-properties heading))))
+      (org-link-completion-annotate
+       (substring-no-properties heading)
+       "Heading"))))
 
 (defun org-link-completion-link-search (path)
   "Move point to target of internal link PATH."
