@@ -584,7 +584,7 @@ heading format."
   "Collect all heading text from the current buffer."
   (save-excursion
     (goto-char (point-min))
-    (cl-loop while (re-search-forward org-outline-regexp nil t)
+    (cl-loop while (re-search-forward (concat "^" org-outline-regexp) nil t)
              for heading = (ignore-errors
                               (org-link--normalize-string
                                (substring-no-properties
