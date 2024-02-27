@@ -2,6 +2,9 @@
 #+AUTHOR: AKIYAMA Kouhei
 
 * ŠT—v
+:PROPERTIES:
+:CUSTOM_ID: overview
+:END:
 
 ‚±‚ÌEmacs Lispƒ‰ƒCƒuƒ‰ƒŠ‚ÍAorg-mode‚É‚¨‚¯‚éƒŠƒ“ƒN•\‹L“à‚ÌŠe•”‚Å completion-at-point (M-TABAC-M-iA‚Ü‚½‚ÍESC TAB) ƒRƒ}ƒ“ƒh‚É‚æ‚é•âŠ®‚ª‚Å‚«‚é‚æ‚¤‚É‚µ‚Ü‚·B
 
@@ -15,17 +18,27 @@
 - [[* /heading/ ][ */description/*
 - [[( */coderef/* )
 - [[( /coderef/ )][ */description/*
-- [[ *Search Target*
-- [[ Search Target ][ */description/*
-- [[ */dir/file*
+- [[ */search target/*
+- [[ /search target/ ][ */description/*
 - [[ *./dir/file*
+- [[ *../dir/file*
 - [[ */dir/file*
+- [[ */dir/file*
+- [[ *~/dir/file*
 - [[ *c:/dir/file*
-- [[/dir/file][ */description/*  (ãq‚Ì / ./ / c:/ ‚ğŠÜ‚Ş)
+- [[/dir/file:: */search target/*  (ãq‚Ì / ./ / ~/ c:/ ‚ğŠÜ‚Ş)
+- [[/dir/file::# */custom-id/*
+- [[/dir/file::* */heading/*
+- [[/dir/file::( */coderef/*
+- [[/dir/file][ */description/*
 - [[file: */file/*
 - [[file+sys: */file/*
 - [[file+emacs: */file/*
-- [[file: /file/ ][ */description/*  (ãq‚Ì file+sys: file+emacs: ‚ğŠÜ‚Ş)
+- [[file: /file/:: */search target/*  (ãq‚Ì file+sys: file+emacs: ‚ğŠÜ‚Ş)
+- [[file: /file/::# */custom-id/*
+- [[file: /file/::* */heading/*
+- [[file: /file/::( */coderef/*
+- [[file: /file/ ][ */description/*
 - [[ /unknown-type/ : */path/*
 - [[ /unknown-type/ : /path/ ][ */description/*
 
@@ -44,6 +57,9 @@
 —lX‚ÈƒŠƒ“ƒN‚Ì•âŠ®‚ğ‚¹‚é‚æ‚¤‚É[[file:link-examples.org][link-examples.org]]‚ª—pˆÓ‚³‚ê‚Ä‚¢‚Ü‚·B
 
 * ƒZƒbƒgƒAƒbƒv
+:PROPERTIES:
+:CUSTOM_ID: setup
+:END:
 
 org-link-completion.el‚ğload-path‚Ì’Ê‚Á‚½êŠ‚É”z’u‚µ‚ÄAinit.el‚ÉŸ‚ÌƒR[ƒh‚ğ’Ç‰Á‚µ‚Ä‚­‚¾‚³‚¢B
 
@@ -72,6 +88,9 @@ org-link-completion-setupŠÖ”‚Ì’†g‚ğŒ©‚ÄA•K—v‚È—v‘f‚¾‚¯‚ğ”²‚«o‚µ‚ÄƒZƒbƒgƒAƒbƒ
 #+end_src
 
 * org-link-completion-at-pointŠÖ”‚ªŒÄ‚Ño‚·ŠÖ”
+:PROPERTIES:
+:CUSTOM_ID: routing
+:END:
 
 ~org-link-completion-at-point~ ŠÖ”‚ÍAƒŠƒ“ƒN‚Ì“à•”‚ğ•âŠ®‚·‚é‚Æ‚«‚Éˆê”ÔÅ‰‚ÉŒÄ‚Ño‚³‚ê‚Ü‚·B
 
@@ -110,6 +129,9 @@ org-link-completion-setupŠÖ”‚Ì’†g‚ğŒ©‚ÄA•K—v‚È—v‘f‚¾‚¯‚ğ”²‚«o‚µ‚ÄƒZƒbƒgƒAƒbƒ
 [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Completion-in-Buffers.html][Completion in Buffers (GNU Emacs Lisp Reference Manual)]] ([[https://ayatakesi.github.io/lispref/29.2/html/Completion-in-Buffers.html][ayatakesi‚³‚ñ‚Ì“ú–{Œê–ó(29.2)]])
 
 * ƒŠƒ“ƒN‚Ì‰ğÍ‚ÆŒ‹‰Ê‚Ìæ“¾
+:PROPERTIES:
+:CUSTOM_ID: parsing
+:END:
 
 ƒŠƒ“ƒN‰ğÍ‚Í ~org-link-completion-parse-at-point~ ŠÖ”‚ªs‚¢‚Ü‚·B
 
@@ -156,6 +178,9 @@ org-link-completion-setupŠÖ”‚Ì’†g‚ğŒ©‚ÄA•K—v‚È—v‘f‚¾‚¯‚ğ”²‚«o‚µ‚ÄƒZƒbƒgƒAƒbƒ
 #+end_src
 
 * ©•ª—p‚ÌƒuƒƒOê—pƒŠƒ“ƒNƒ^ƒCƒv‚Ìì¬—á
+:PROPERTIES:
+:CUSTOM_ID: example-blog-type
+:END:
 
 „‚ÍƒuƒƒO‚ğ‘‚­‚Ì‚ÉOrg2blog‚ğg‚Á‚Ä‚¢‚é‚Ì‚Å‚·‚ªAƒuƒƒO‚Ìƒ|ƒXƒg‚Ö‚ÌƒŠƒ“ƒN‚ğ•\‚·ê—p‚ÌƒŠƒ“ƒNƒ^ƒCƒv‚ğ’è‹`‚µ‚Ä‚¢‚Ü‚·B‚±‚ê‚ğg‚¤‚Æorg-modeƒtƒ@ƒCƒ‹“à‚ÅŸ‚Ì‚æ‚¤‚É‘‚¯‚Ü‚·B
 
@@ -268,6 +293,9 @@ org-link-completion-setupŠÖ”‚Ì’†g‚ğŒ©‚ÄA•K—v‚È—v‘f‚¾‚¯‚ğ”²‚«o‚µ‚ÄƒZƒbƒgƒAƒbƒ
 ‘¼‚Ì‘€ì(:followA:storeA:exportA:completeA:insert-description)‚ÍA‚±‚Ìƒ‰ƒCƒuƒ‰ƒŠ‚Ìï|‚©‚çŠO‚ê‚é‚Ì‚ÅŠ„ˆ¤‚µ‚Ü‚·BŠF‚³‚ñD‚«‚È‚æ‚¤‚É‘‚¢‚Ä‚İ‚Ä‚­‚¾‚³‚¢B
 
 * ƒ‰ƒCƒZƒ“ƒX
+:PROPERTIES:
+:CUSTOM_ID: license
+:END:
 
 ‚±‚Ìƒ\ƒtƒgƒEƒFƒA‚ÍGPLv3‚ÌŒ³‚Åg—p‚Å‚«‚Ü‚·B‚±‚Ìƒ\ƒtƒgƒEƒFƒA‚Í©—R‚Ég—pE•ÏXE”z•z‚Å‚«‚Ü‚·B
 

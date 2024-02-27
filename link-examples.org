@@ -42,6 +42,10 @@
     - [[../][
     - [[../org-link-completion/
     - [[../org-link-completion/README.org][
+    - [[./link-examples.org::
+    - [[./link-examples.org::#
+    - [[./link-examples.org::*
+    - [[./link-examples.org::(
   - Absolute Path
     - [[/
     - [[\
@@ -55,6 +59,10 @@
     - [[~\.emacs.d/]
     - [[c:/home/
     - [[c:\home\
+    - [[~/emacs/lisp/org-link-completion/link-examples.org::
+    - [[~/emacs/lisp/org-link-completion/link-examples.org::#
+    - [[~/emacs/lisp/org-link-completion/link-examples.org::*
+    - [[~/emacs/lisp/org-link-completion/link-examples.org::(
   - Not a Path
     - [[README.org
     - [[.
@@ -81,7 +89,18 @@
   - [[file:::*Link Target
   - [[file:.emacs][
   - [[file:][
-  - [[file:::*Link Target][
+  - [[file:README.org::
+  - [[file:README.org::#
+  - [[file:README.org::*
+  - [[file:README.org::(
+  - [[file:./link-examples.org::
+  - [[file:./link-examples.org::#
+  - [[file:./link-examples.org::*
+  - [[file:./link-examples.org::(
+  - [[file:::
+  - [[file:::#
+  - [[file:::*
+  - [[file:::(
 - https
   - [[https:
   - [[https://misohena.jp/blog/2024-02-23-org-link-completion-el.html][

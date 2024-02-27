@@ -4,6 +4,9 @@
 (This document was machine translated from [[file:README-ja.org][README-ja.org]])
 
 * Overview
+:PROPERTIES:
+:CUSTOM_ID: overview
+:END:
 
 This Emacs Lisp library allows completion at various points in a link in org-mode using the completion-at-point (M-TAB, C-M-i, or ESC TAB) command.
 
@@ -17,17 +20,27 @@ You can complete almost anywhere within a link. By default, the following locati
 - [[* /heading/ ][ */description/*
 - [[( */coderef/* )
 - [[( /coderef/ )][ */description/*
-- [[ *Search Target*
-- [[ Search Target ][ */description/*
+- [[ *search target*
+- [[ /search target/ ][ */description/*
 - [[ */dir/file*
 - [[ *./dir/file*
+- [[ *../dir/file*
 - [[ */dir/file*
+- [[ *~/dir/file*
 - [[ *c:/dir/file*
-- [[/dir/file][ */description/*  (Include / ./ / c:/)
+- [[/dir/file:: */search target/*  (Include / ./ / ~/ c:/)
+- [[/dir/file::# */custom-id/*
+- [[/dir/file::* */heading/*
+- [[/dir/file::( */coderef/*
+- [[/dir/file][ */description/*
 - [[file: */file/*
 - [[file+sys: */file/*
 - [[file+emacs: */file/*
-- [[file: /file/ ][ */description/*  (Include file+sys: file+emacs:)
+- [[file: /file/:: */search target/*  (Include file+sys: file+emacs:)
+- [[file: /file/::# */custom-id/*
+- [[file: /file/::* */heading/*
+- [[file: /file/::( */coderef/*
+- [[file: /file/ ][ */description/*
 - [[ /unknown-type/ : */path/*
 - [[ /unknown-type/ : /path/ ][ */description/*
 
@@ -46,6 +59,9 @@ Also, as a usage example, I'll show you a function I use later that completes li
 [[file:link-examples.org][link-examples.org]] is provided so that you can try out various link completions.
 
 * Setup
+:PROPERTIES:
+:CUSTOM_ID: setup
+:END:
 
 Place org-link-completion.el in load-path and add the following code to init.el.
 
@@ -74,6 +90,9 @@ You can also look at the contents of the org-link-completion-setup function and 
 #+end_src
 
 * Functions called by org-link-completion-at-point function
+:PROPERTIES:
+:CUSTOM_ID: routing
+:END:
 
 The ~org-link-completion-at-point~ function is called first when completing a link.
 
@@ -112,6 +131,9 @@ The called function must return the same format as the function registered with 
 [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Completion-in-Buffers.html][Completion in Buffers (GNU Emacs Lisp Reference Manual)]] ([[https://ayatakesi.github.io/lispref/29.2/html/Completion-in-Buffers.html][ayatakesi's Japanese translation (29.2)]])
 
 * Parsing links and getting results
+:PROPERTIES:
+:CUSTOM_ID: parsing
+:END:
 
 Link analysis is performed by the ~org-link-completion-parse-at-point~ function.
 
@@ -158,6 +180,9 @@ Macros are also available to make writing these processes easier. The following 
 #+end_src
 
 * Example of creating a link type for your own blog
+:PROPERTIES:
+:CUSTOM_ID: example-blog-type
+:END:
 
 I'm using Org2blog to write a blog, and I've defined a special link type to represent links to blog posts. Using this, I can write the following in an org-mode file.
 
@@ -270,6 +295,9 @@ Register this in org-link-parameters as before.
 Other operations (:follow, :store, :export, :complete, :insert-description) are omitted as they are outside the purpose of this library. Please feel free to write as you like.
 
 * License
+:PROPERTIES:
+:CUSTOM_ID: license
+:END:
 
 This software is licensed under GPLv3. You are free to use, modify and distribute this software.
 

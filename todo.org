@@ -25,16 +25,6 @@ org-fontify-meta-lines-and-blocks-1でのやり方と一致していれば問題
 - ]|] => ]を補完する
 - ]]| => 何もしない
 
-** TODO fileタイプで::以降の記法を補完する
-[[https://orgmode.org/manual/Search-Options.html][Search Options (The Org Manual)]]
-- ::NNN
-- ::My Target
-- ::*headline
-- ::#custom-id
-- ::/regexp/
-
-空のファイル名は現在のファイルを検索する。[[file:::fileタイプで]] [[fileタイプで]] どちらでも良い。
-
 ** TODO htmlファイルのタイトルを補完する
 ** TODO httpやhttpsでタイトルを補完する
 http、https経由でhtmlやorgファイルをダウンロードしてファイルと同じように解析する。
@@ -43,6 +33,10 @@ http、https経由でhtmlやorgファイルをダウンロードしてファイ�
 ** TODO idタイプを補完できるか検討する
 ** TODO fileの説明部分などで重複が発生しているのをどうするか
 直す？　アノテーションを付けるなら重複していても仕方ないかもしれないけど。
+** TODO coderefの補完範囲の終端は)までにすべきでは？
+(1+ path-beg)(または(1+ option-beg))からpath-endまでとしているが、
+)を含めるべきではないなら)があるときは一つ前にすべきでは？
+[[*coderefの)を補完する][coderefの)を補完する]]をどうするかにもよる。
 * Finished
 ** DONE 「#」で始まる内部リンクを補完する(customid)
 CLOSED: [2024-02-24 Sat 13:30]
@@ -149,3 +143,13 @@ CLOSED: [2024-02-27 Tue 01:39]
 ** DONE 同じ見出しが何度も収集されてしまう問題を修正する
 CLOSED: [2024-02-27 Tue 10:39]
 org-outline-regexpは行頭に限定されていない！
+** DONE fileタイプで::以降の記法を補完する
+CLOSED: [2024-02-27 Tue 10:38]
+[[https://orgmode.org/manual/Search-Options.html][Search Options (The Org Manual)]]
+- ::NNN
+- ::My Target
+- ::*headline
+- ::#custom-id
+- ::/regexp/
+
+空のファイル名は現在のファイルを検索する。[[file:::fileタイプで]] [[fileタイプで]] どちらでも良い。

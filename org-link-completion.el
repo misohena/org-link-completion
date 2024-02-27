@@ -905,7 +905,7 @@ in coderef format."
 
 ;; Complete links with <type>: part.
 
-;;;;; Complete Unknown Type Link
+;;;;; Unknown Type Link
 
 (defun org-link-completion-path-unknown-type ()
   (org-link-completion-path-from-other-links))
@@ -914,7 +914,7 @@ in coderef format."
   (org-link-completion-desc-from-other-links))
 
 
-;;;;; Complete File Type Link
+;;;;; File Type Link
 
 ;;;###autoload
 (defun org-link-completion-setup-type-file ()
@@ -924,6 +924,23 @@ in coderef format."
      :capf-path 'org-link-completion-path-file
      :capf-desc 'org-link-completion-desc-file)))
 
+(defcustom org-link-completion-path-file-functions
+  '((custom-id . org-link-completion-path-file-custom-id)
+    (heading . org-link-completion-path-file-heading)
+    (coderef . org-link-completion-path-file-coderef)
+    (search . org-link-completion-path-file-search)
+    ;;(regexp . org-link-completion-path-file-regexp)
+    (file . org-link-completion-path-file-file))
+  "Alist of functions to complete path for each kind of file link."
+  :group 'org-link-completion-functions
+  :type 'alist)
+
+(defun org-link-completion-path-file-option-beg (path-beg path-end)
+  (save-excursion
+    (goto-char path-beg)
+    (when (search-forward "::" path-end t)
+      (point))))
+
 ;;;###autoload
 (defun org-link-completion-path-file ()
   "Complete <filename> of [[<type>:<filename> at point.
@@ -932,14 +949,77 @@ This function also works for `file+sys:' and `file+emacs:' link types.
 
 To enable this, call `org-lnk-completion-setup-type-file' function."
   (org-link-completion-parse-let :path (path-beg path-end)
-    (list
-     path-beg path-end
-     #'read-file-name-internal
-     :annotation-function
-     (lambda (str) (if (string-suffix-p "/" str) " Dir" " File"))
-     :company-kind
-     (lambda (str) (if (string-suffix-p "/" str) 'folder 'file))
-     :exclusive 'no)))
+    (let* ((option-beg
+            (org-link-completion-path-file-option-beg path-beg path-end))
+           (has-option (and option-beg (<= option-beg (point))))
+           (file (org-link-completion-file-expand-empty
+                  (buffer-substring-no-properties
+                   path-beg
+                   (if option-beg (- option-beg 2) path-end))))
+           (kind (if has-option
+                     (pcase (char-after option-beg)
+                       (?# 'custom-id)
+                       (?* 'heading)
+                       (?\( 'coderef)
+                       (?/ 'regexp)
+                       (_ 'search))
+                   'file))
+           (fun (alist-get kind org-link-completion-path-file-functions)))
+      (org-link-completion-call fun path-beg path-end option-beg file))))
+
+(defun org-link-completion-path-file-file (path-beg path-end option-beg _file)
+  (list
+   path-beg (if option-beg (- option-beg 2) path-end)
+   #'read-file-name-internal
+   :annotation-function
+   (lambda (str) (if (string-suffix-p "/" str) " Dir" " File"))
+   :company-kind
+   (lambda (str) (if (string-suffix-p "/" str) 'folder 'file))
+   :exclusive 'no))
+
+(defun org-link-completion-path-file-custom-id (_path-beg
+                                                path-end option-beg file)
+  (org-link-completion-path-file-option-collect
+   #'org-link-completion-collect-custom-id
+   file (1+ option-beg) path-end)) ;; Skip #
+
+(defun org-link-completion-path-file-heading (_path-beg
+                                              path-end option-beg file)
+  (org-link-completion-path-file-option-collect
+   #'org-link-completion-collect-heading
+   file (1+ option-beg) path-end)) ;; Skip *
+
+(defun org-link-completion-path-file-coderef (_path-beg
+                                              path-end option-beg file)
+  (org-link-completion-path-file-option-collect
+   #'org-link-completion-collect-coderef
+   file (1+ option-beg) path-end)) ;; Skip ( ;; TODO: path-end? before close paren? (coderef)
+
+(defun org-link-completion-path-file-search (_path-beg
+                                             path-end option-beg file)
+  (org-link-completion-path-file-option-collect
+   #'org-link-completion-collect-search-target
+   file option-beg path-end
+   (list
+    (org-link-completion-annotate "#" "CUSTOM_ID")
+    (org-link-completion-annotate "*" "Heading")
+    (org-link-completion-annotate "(" "Coderef")
+    (org-link-completion-annotate "/" "Regexp"))))
+
+(defun org-link-completion-path-file-option-collect (fun
+                                                     file
+                                                     completion-beg path-end
+                                                     &optional additional)
+  (org-link-completion-capf-result
+   completion-beg path-end
+   (nconc
+    additional
+    (org-link-completion-call-with-file-find file fun))
+   :kind 'text
+   :annotation-function #'org-link-completion-annotation))
+
+
+;; Description
 
 (defcustom org-link-completion-desc-file-collectors
   '(org-link-completion-collect-description-from-other-links
@@ -966,7 +1046,7 @@ in file link."
      :annotation-function #'org-link-completion-annotation)))
 
 (defun org-link-completion-file-path-part (path)
-  (org-link-completion-file-non-empty
+  (org-link-completion-file-expand-empty
    (org-link-completion-file-without-options path)))
 
 (defun org-link-completion-file-without-options (path)
@@ -975,7 +1055,10 @@ in file link."
       (match-string 1 path)
     path))
 
-(defun org-link-completion-file-non-empty (path)
+(defun org-link-completion-file-expand-empty (path)
+  "Expand empty filename to current buffer's filename.
+
+An example of an empty filename is: [[file:::*Heading]]"
   (if (string-empty-p path)
       (buffer-file-name)
     path))
@@ -1044,7 +1127,7 @@ in file link."
 
 ;; Complete path and description from those used in other links.
 
-;;;;; Complete Path from Other Links
+;;;;; Path from Other Links
 
 (defun org-link-completion-path-from-other-links ()
   "Complete the path at point from other links."
@@ -1075,7 +1158,7 @@ in file link."
           table)))))
 
 
-;;;;; Complete Description from Other Links
+;;;;; Description from Other Links
 
 (defun org-link-completion-desc-from-other-links ()
   "Complete the description at point from other links."
@@ -1267,6 +1350,15 @@ For example:
 (defun org-link-completion-string-list (str)
   (when (and str (not (string-empty-p str)))
     (list str)))
+
+(defun org-link-completion-call-with-file-find (file func)
+  "Open FILE in a buffer and then call FUNC.
+If a new buffer is created, it will not be killed. It is
+inefficient to reopen the FILE every time it is completed."
+  (when (file-regular-p file)
+    (with-current-buffer (find-file-noselect file t)
+      (save-mark-and-excursion
+        (funcall func)))))
 
 
 (provide 'org-link-completion)
