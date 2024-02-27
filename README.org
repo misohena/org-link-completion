@@ -42,6 +42,8 @@ You can complete almost anywhere within a link. By default, the following locati
 - [[file: /file/::* */heading/*
 - [[file: /file/::( */coderef/*
 - [[file: /file/ ][ */description/*
+- [[id: */id/*
+- [[id: /id/ ][ */description/*
 - [[ /unknown-type/ : */path/*
 - [[ /unknown-type/ : /path/ ][ */description/*
 

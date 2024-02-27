@@ -101,6 +101,11 @@
   - [[file:::#
   - [[file:::*
   - [[file:::(
+- id
+  - [[id:
+  - [[id:fba836c2-5ae8-4f2a-a559-bc5dbbe90865][
+  - [[id:8117e6ec-de24-48df-9986-727e8ed08761][
+  - [[id:8117e6ec-de24-48df-9986-727e8ed08761][ID:8117e6ec-de24-48df-9986-727e8ed08761]]
 - https
   - [[https:
   - [[https://misohena.jp/blog/2024-02-23-org-link-completion-el.html][
@@ -211,6 +216,16 @@ description list
 #+end_example
 
 [[(in example block)][(in example block)行目]]
+
+** Entry with ID1
+:PROPERTIES:
+:ID:       8117e6ec-de24-48df-9986-727e8ed08761
+:END:
+
+** Entry with ID2
+:PROPERTIES:
+:ID:       fba836c2-5ae8-4f2a-a559-bc5dbbe90865
+:END:
 
 ** HTTPS
 

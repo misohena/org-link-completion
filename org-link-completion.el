@@ -48,6 +48,7 @@
   (interactive)
   (with-eval-after-load "org"
     (org-link-completion-setup-type-file)
+    (org-link-completion-setup-type-id)
     (add-hook 'org-mode-hook
               (lambda ()
                 (add-hook 'completion-at-point-functions
@@ -1095,19 +1096,12 @@ An example of an empty filename is: [[file:::*Heading]]"
       (org-link-completion-string-list
        (org-link-completion-annotate
         (if-let ((filepath (org-link-completion-file-path-part path)))
-            (when (and (string-match-p "\\.org\\'" filepath)
-                       (file-regular-p filepath))
-              (if-let ((buffer (get-file-buffer filepath)))
-                  ;; From buffer
-                  (with-current-buffer buffer
-                    (org-link-completion-get-org-title))
-                ;; From file directly
-                (with-temp-buffer
-                  (insert-file-contents filepath nil nil
-                                        ;; It's probably near the top
-                                        ;; TODO: Customize
-                                        16384)
-                  (org-link-completion-get-org-title))))
+            (when (string-match-p "\\.org\\'" filepath)
+              (org-link-completion-call-with-file
+               filepath nil #'org-link-completion-get-org-title nil
+               ;; It's probably near the top
+               ;; TODO: Customize
+               16384))
           ;; From current buffer
           (when (derived-mode-p 'org-mode)
             (org-link-completion-get-org-title)))
@@ -1121,6 +1115,186 @@ An example of an empty filename is: [[file:::*Heading]]"
       (when (re-search-forward
              "^#\\+TITLE: *\\(.*\\)$" nil t)
         (match-string-no-properties 1)))))
+
+
+;;;;; ID Type Link
+
+;; Setup
+
+;;;###autoload
+(defun org-link-completion-setup-type-id ()
+  (org-link-set-parameters
+   "id"
+   :capf-path 'org-link-completion-path-id
+   :capf-desc 'org-link-completion-desc-id))
+
+;; Path
+
+(defun org-link-completion-path-id ()
+  "Complete <id> of [[id:<id> at point.
+
+To enable this, call `org-lnk-completion-setup-type-id' function."
+  (org-link-completion-parse-let :path (path-beg path-end)
+    ;;(message "Enter org-link-completion-path-id")
+    (org-link-completion-capf-result
+     path-beg path-end
+     ;; I used the idea from the following URL as a reference.
+     ;; https://emacs.stackexchange.com/a/74550
+     ;; completion - completing-read, search also in annotations -
+     ;; Emacs Stack Exchange
+     (lambda (string predicate action)
+       ;;(message "Complete id action:%s string:%s" action string)
+       (pcase action
+         ('t (cl-loop for cell in (org-link-completion-get-id-cache)
+                      for id = (car cell)
+                      for heading = (cdr cell)
+                      when (and
+                            (or (null predicate)
+                                (funcall predicate cell))
+                            (or (string-search string id) ;; TODO: Ignore case?
+                                (let ((case-fold-search t)) ;; Ignore case!
+                                  (string-match-p (regexp-quote string)
+                                                  heading))))
+                      collect id))))
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
+
+;; Collect ID and Headings
+
+(defcustom org-link-completion-collect-id-use-find-file-noselect t
+  "Non-nil means that when collecting IDs and headings, open
+unvisited files with find-file-noselect.
+
+After processing, a buffer of the files used for collection
+remains, but processing will be faster the next time."
+  :group 'org-link-completion
+  :type 'boolean)
+
+(defun org-link-completion-collect-id-heading-alist ()
+  (let ((files (org-link-completion-get-id-files))
+        (current-file (buffer-file-name
+                       (or (buffer-base-buffer (current-buffer))
+                           (current-buffer))))
+        (alist)
+        (case-fold-search t)
+        (re (org-re-property "ID" nil nil nil)))
+    ;; Include current file in search.
+    (unless (member current-file files)
+      (push current-file files))
+    (dolist (file files)
+      (org-link-completion-call-with-file
+       file 'org-mode
+       (lambda ()
+         (while (re-search-forward re nil t)
+           (when-let ((id (org-entry-get (point) "ID" nil t)))
+             (unless (assoc id alist #'string=) ;; TODO: Ignore case?
+               (when-let ((heading
+                           (org-link-comletion-collect-id-heading-on-entry)))
+                 (let* ((heading (substring-no-properties heading))
+                        (id (org-link-completion-annotate id heading)))
+                   (push (cons id heading) alist)))))))
+       org-link-completion-collect-id-use-find-file-noselect))
+    alist))
+
+(defun org-link-comletion-collect-id-heading-on-entry ()
+  (when-let ((heading (org-get-heading t t t t)))
+    (let ((file (buffer-file-name)))
+      ;; TODO: Customize
+      ;; <heading> - <filename>
+      (concat (substring-no-properties heading)
+              (and file (concat " - " (file-name-nondirectory file)))))))
+
+(defun org-link-completion-get-id-files ()
+  (require 'org-id)
+  (defvar org-id-locations)
+  (unless org-id-locations (org-id-locations-load))
+  (when (and org-id-locations
+             (hash-table-p org-id-locations))
+    (let (files)
+      (maphash (lambda (_id file)
+                 (unless (member file files)
+                   (push file files)))
+               org-id-locations)
+      files)))
+
+;; Cache
+
+(defvar org-link-completion-path-id--cached-p nil)
+(defvar org-link-completion-path-id--cache nil)
+(defvar org-link-completion-path-id--cache-time nil)
+(defconst org-link-completion-path-id--cache-timeout 60)
+
+(defun org-link-completion-clear-id-cache-hook ()
+  ;;(message "clear-id-cache in-region-mode=%s" completion-in-region-mode)
+  (when (null completion-in-region-mode)
+    (org-link-completion-clear-id-cache)))
+
+(defun org-link-completion-clear-id-cache ()
+  (when org-link-completion-path-id--cached-p
+    (setq org-link-completion-path-id--cached-p nil
+          org-link-completion-path-id--cache nil
+          org-link-completion-path-id--cache-time nil)
+    (remove-hook 'completion-in-region-mode-hook
+                 'org-link-completion-clear-id-cache-hook)))
+
+(defun org-link-completion-get-id-cache ()
+  ;; Check timeout
+  (when org-link-completion-path-id--cached-p
+    (if (>= (- (float-time) org-link-completion-path-id--cache-time)
+            org-link-completion-path-id--cache-timeout)
+        ;; Timeout
+        (org-link-completion-clear-id-cache)
+      ;; Update time
+      (setq org-link-completion-path-id--cache-time (float-time))))
+
+  ;; Create cache
+  (unless org-link-completion-path-id--cached-p
+    (setq org-link-completion-path-id--cache
+          (org-link-completion-collect-id-heading-alist)
+          org-link-completion-path-id--cache-time (float-time)
+          org-link-completion-path-id--cached-p t)
+    (add-hook 'completion-in-region-mode-hook
+              'org-link-completion-clear-id-cache-hook))
+
+  ;; Return cache
+  org-link-completion-path-id--cache)
+
+;; Description
+
+(defcustom org-link-completion-desc-id-collectors
+  '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-heading-by-id)
+  "List of functions that collect description completion candidates
+in id link."
+  :group 'org-link-completion-functions
+  :type '(repeat (function)))
+
+(defun org-link-completion-desc-id ()
+  "Complete <desc> of [[id:<id>][<desc> at point.
+
+To enable this, call `org-lnk-completion-setup-type-id' function."
+  (org-link-completion-parse-let :desc (desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-call-collectors
+      org-link-completion-desc-id-collectors)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
+
+(defun org-link-completion-collect-heading-by-id ()
+  (org-link-completion-parse-let :desc (path)
+    (org-link-completion-string-list
+     (org-link-completion-get-heading-by-id path))))
+
+(defun org-link-completion-get-heading-by-id (id)
+  (when-let ((file (org-id-find-id-file id))) ;; or current file
+    (org-link-completion-call-with-file
+     file 'org-mode
+     (lambda ()
+       (when-let ((pos (org-find-property "ID" id)))
+         (goto-char pos)
+         (when-let ((heading (org-get-heading t t t t)))
+           (substring-no-properties heading)))))))
 
 
 ;;;; Complete From Other Links
@@ -1359,6 +1533,37 @@ inefficient to reopen the FILE every time it is completed."
     (with-current-buffer (find-file-noselect file t)
       (save-mark-and-excursion
         (funcall func)))))
+
+(defun org-link-completion-call-with-file (file mode func
+                                                &optional
+                                                use-find-file-noselect
+                                                limit)
+  "Open FILE in a buffer and then call FUNC.
+
+If USER-FIND-FILE-NOSELECT is non-nil and a new buffer is
+created, it will not be killed. It is inefficient to reopen the
+FILE every time it is completed."
+  (when (and (functionp func)
+             (file-regular-p file))
+    (let* ((file-buffer (or (find-buffer-visiting file)
+                            (and
+                             use-find-file-noselect
+                             (find-file-noselect file))))
+           (temp-buffer (unless file-buffer
+                          (generate-new-buffer " *temp*" t))))
+      (unwind-protect
+          (with-current-buffer (or file-buffer temp-buffer)
+            (when temp-buffer
+              (insert-file-contents file nil nil limit)
+              (when mode
+                (funcall mode)))
+            (save-mark-and-excursion
+              (save-restriction
+                (widen)
+                (goto-char (point-min))
+                (funcall func))))
+        (when (buffer-live-p temp-buffer)
+          (kill-buffer temp-buffer))))))
 
 
 (provide 'org-link-completion)

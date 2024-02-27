@@ -17,6 +17,7 @@ org-fontify-meta-lines-and-blocks-1でのやり方と一致していれば問題
 そもそも一般的に補完候補を選択した後にそれ以上の文字列を追加するというのは良いのだろうか。ファイル名補完なんかではディレクトリの場合次の/まで候補に出している。
 まぁ、)][まで入力して問題ないだろう。そうなると他も][が問題になる。
 
+** TODO idを補完した後に][を挿入したり、説明部を補完した後に]]を挿入したい
 ** TODO pathの補完終了時に][を挿入する
 ** TODO ]と[の間等で補完できるようにする
 - |[[ => [[を補完する
@@ -30,13 +31,32 @@ org-fontify-meta-lines-and-blocks-1でのやり方と一致していれば問題
 http、https経由でhtmlやorgファイルをダウンロードしてファイルと同じように解析する。
 さすがにやり過ぎなのでデフォルトで無効にする？
 
-** TODO idタイプを補完できるか検討する
+** TODO helpタイプを補完できるか検討する
+** TODO infoタイプを補完できるか検討する
 ** TODO fileの説明部分などで重複が発生しているのをどうするか
 直す？　アノテーションを付けるなら重複していても仕方ないかもしれないけど。
 ** TODO coderefの補完範囲の終端は)までにすべきでは？
 (1+ path-beg)(または(1+ option-beg))からpath-endまでとしているが、
 )を含めるべきではないなら)があるときは一つ前にすべきでは？
 [[*coderefの)を補完する][coderefの)を補完する]]をどうするかにもよる。
+** TODO org-link-completion-path-file-functionsは引数無しにすべき？
+ここに指定する関数だけ引数を取る。
+最初は org-link-completion-pos と同じようにしようと思ったが、想像以上に煩雑になったので普通に引数で書いたらシンプルになったという経緯がある。
+
+引数:
+- path-beg
+- path-end
+- option-beg
+- file
+
+一番の問題はoption-beg(やfile)をどうやって引き渡すかだろう。
+もっと一般化された仕組みがあると良いのだけど。
+- データの任意のスロットを静的に名前でlet出来る仕組み。
+- 解析データを追加できる仕組み。
+- 継承関係を把握できるような仕組み。
+
+** TODO org-link-completion-call-with-file-findを廃止する
+org-link-completion-call-with-fileを使えば問題ないはず。
 * Finished
 ** DONE 「#」で始まる内部リンクを補完する(customid)
 CLOSED: [2024-02-24 Sat 13:30]
@@ -153,3 +173,17 @@ CLOSED: [2024-02-27 Tue 10:38]
 - ::/regexp/
 
 空のファイル名は現在のファイルを検索する。[[file:::fileタイプで]] [[fileタイプで]] どちらでも良い。
+** DONE idタイプを補完できるか検討する
+CLOSED: [2024-02-28 Wed 00:09]
+問題は見出しを選んでもらってIDを入力するようなことが出来るかどうか。
+次が参考になる？
+[[https://emacs.stackexchange.com/questions/74547/completing-read-search-also-in-annotations][completion - completing-read, search also in annotations - Emacs Stack Exchange]]
+最後のコードは少し有望かもしれない。
+
+後は[[elisp-library:org-id]]をよく読むしか。
+[[elisp-variable:org-id-locations][org-id-locations]]から全IDを補完させることは出来そうだ(nilならロードする必要あり)。
+その時に記録されている全ファイルから見出しを集めてくることも出来る。
+さすがにキャッシュくらいはした方がいいかもしれない。
+そこに上の手法で見出しからIDを補完する。
+
+出来ればIDが付いていない見出しも選んだらIDが付くようにしたいが、それは出来なくても仕方が無い。必要なら大人しくorg-id-store-linkを使えという話。
