@@ -1061,7 +1061,7 @@ in file link."
 
 An example of an empty filename is: [[file:::*Heading]]"
   (if (string-empty-p path)
-      (buffer-file-name)
+      (org-link-completion-get-current-file)
     path))
 
 (defun org-link-completion-collect-file-name ()
@@ -1172,15 +1172,13 @@ remains, but processing will be faster the next time."
 
 (defun org-link-completion-collect-id-heading-alist ()
   (let ((files (org-link-completion-get-id-files))
-        (current-file (buffer-file-name
-                       (or (buffer-base-buffer (current-buffer))
-                           (current-buffer))))
+        (current-file (org-link-completion-get-current-file))
         (alist)
         (case-fold-search t)
         (re (org-re-property "ID" nil nil nil)))
-    ;; Include current file in search.
-    (unless (member current-file files)
-      (push current-file files))
+    ;; Include current file and put it at the beginning.
+    (when current-file
+      (setq files (cons current-file (delete current-file files))))
     (dolist (file files)
       (org-link-completion-call-with-file
        file 'org-mode
@@ -1189,20 +1187,20 @@ remains, but processing will be faster the next time."
            (when-let ((id (org-entry-get (point) "ID" nil t)))
              (unless (assoc id alist #'string=) ;; TODO: Ignore case?
                (when-let ((heading
-                           (org-link-comletion-collect-id-heading-on-entry)))
+                           (org-link-comletion-collect-id-heading-on-entry
+                            file)))
                  (let* ((heading (substring-no-properties heading))
                         (id (org-link-completion-annotate id heading)))
                    (push (cons id heading) alist)))))))
        org-link-completion-collect-id-use-find-file-noselect))
-    alist))
+    (nreverse alist)))
 
-(defun org-link-comletion-collect-id-heading-on-entry ()
+(defun org-link-comletion-collect-id-heading-on-entry (file)
   (when-let ((heading (org-get-heading t t t t)))
-    (let ((file (buffer-file-name)))
-      ;; TODO: Customize
-      ;; <heading> - <filename>
-      (concat (substring-no-properties heading)
-              (and file (concat " - " (file-name-nondirectory file)))))))
+    ;; TODO: Customize
+    ;; <heading> - <filename>
+    (concat (substring-no-properties heading)
+            (and file (concat " - " (file-name-nondirectory file))))))
 
 (defun org-link-completion-get-id-files ()
   (require 'org-id)
@@ -1212,8 +1210,9 @@ remains, but processing will be faster the next time."
              (hash-table-p org-id-locations))
     (let (files)
       (maphash (lambda (_id file)
-                 (unless (member file files)
-                   (push file files)))
+                 (let ((abs-file (expand-file-name file)))
+                   (unless (member abs-file files)
+                     (push abs-file files))))
                org-id-locations)
       files)))
 
@@ -1565,6 +1564,11 @@ FILE every time it is completed."
         (when (buffer-live-p temp-buffer)
           (kill-buffer temp-buffer))))))
 
+(defun org-link-completion-get-current-file ()
+  (expand-file-name
+   (buffer-file-name
+    (or (buffer-base-buffer (current-buffer))
+        (current-buffer)))))
 
 (provide 'org-link-completion)
 ;;; org-link-completion.el ends here
