@@ -23,10 +23,11 @@
 - [[ *./dir/file*
 - [[ *../dir/file*
 - [[ */dir/file*
-- [[ */dir/file*
 - [[ *~/dir/file*
+- [[ *~USER/dir/file*
 - [[ *c:/dir/file*
-- [[/dir/file:: */search target/*  (上述の / ./ / ~/ c:/ を含む)
+- [[ *\dir\file*
+- [[/dir/file:: */search target/*  (上述の ./ ../ / ~ c:/ \ を含む)
 - [[/dir/file::# */custom-id/*
 - [[/dir/file::* */heading/*
 - [[/dir/file::( */coderef/*

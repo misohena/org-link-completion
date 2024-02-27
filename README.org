@@ -20,15 +20,16 @@ You can complete almost anywhere within a link. By default, the following locati
 - [[* /heading/ ][ */description/*
 - [[( */coderef/* )
 - [[( /coderef/ )][ */description/*
-- [[ *search target*
+- [[ */search target/*
 - [[ /search target/ ][ */description/*
-- [[ */dir/file*
 - [[ *./dir/file*
 - [[ *../dir/file*
 - [[ */dir/file*
 - [[ *~/dir/file*
+- [[ *~USER/dir/file*
 - [[ *c:/dir/file*
-- [[/dir/file:: */search target/*  (Include / ./ / ~/ c:/)
+- [[ *\dir\file*
+- [[/dir/file:: */search target/*  (Include ./ ../ / ~ c:/ \)
 - [[/dir/file::# */custom-id/*
 - [[/dir/file::* */heading/*
 - [[/dir/file::( */coderef/*
