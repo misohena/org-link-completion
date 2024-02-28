@@ -656,7 +656,7 @@ coderef format."
 (defcustom org-link-completion-path-search-collectors
   ;; Ignore headings, all words.
   '(org-link-completion-collect-dedicated-target
-    org-link-complete-collect-element-names)
+    org-link-completion-collect-element-names)
   "List of functions that collect path completion candidates in
 search target format."
   :group 'org-link-completion-functions
@@ -689,7 +689,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
              when target
              collect target)))
 
-(defun org-link-complete-collect-element-names ()
+(defun org-link-completion-collect-element-names ()
   "Collect all element names (#+NAME:) from the current buffer."
   (save-excursion
     (goto-char (point-min))
@@ -1191,7 +1191,7 @@ remains, but processing will be faster the next time."
            (when-let ((id (org-entry-get (point) "ID" nil t)))
              (unless (assoc id alist #'string=) ;; TODO: Ignore case?
                (when-let ((heading
-                           (org-link-comletion-collect-id-heading-on-entry
+                           (org-link-completion-collect-id-heading-on-entry
                             file)))
                  (let* ((heading (substring-no-properties heading))
                         (id (org-link-completion-annotate id heading)))
@@ -1199,7 +1199,7 @@ remains, but processing will be faster the next time."
        org-link-completion-collect-id-use-find-file-noselect))
     (nreverse alist)))
 
-(defun org-link-comletion-collect-id-heading-on-entry (file)
+(defun org-link-completion-collect-id-heading-on-entry (file)
   (when-let ((heading (org-get-heading t t t t)))
     ;; TODO: Customize
     ;; <heading> - <filename>
