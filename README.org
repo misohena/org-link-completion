@@ -44,6 +44,8 @@ You can complete almost anywhere within a link. By default, the following locati
 - [[file: /file/ ][ */description/*
 - [[id: */id/*
 - [[id: /id/ ][ */description/*
+- [[help: */function-or-variable/*
+- [[help: /function-or-variable/ ][ */description/*
 - [[ /unknown-type/ : */path/*
 - [[ /unknown-type/ : /path/ ][ */description/*
 

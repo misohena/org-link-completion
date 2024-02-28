@@ -27,6 +27,7 @@
 (require 'cl-lib)
 (require 'org)
 (require 'org-element)
+(require 'elisp-mode)
 
 
 (defgroup org-link-completion nil
@@ -49,6 +50,7 @@
   (with-eval-after-load "org"
     (org-link-completion-setup-type-file)
     (org-link-completion-setup-type-id)
+    (org-link-completion-setup-type-help)
     (add-hook 'org-mode-hook
               (lambda ()
                 (add-hook 'completion-at-point-functions
@@ -1130,6 +1132,7 @@ An example of an empty filename is: [[file:::*Heading]]"
 
 ;; Path
 
+;;;###autoload
 (defun org-link-completion-path-id ()
   "Complete <id> of [[id:<id> at point.
 
@@ -1268,6 +1271,7 @@ in id link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
+;;;###autoload
 (defun org-link-completion-desc-id ()
   "Complete <desc> of [[id:<id>][<desc> at point.
 
@@ -1294,6 +1298,61 @@ To enable this, call `org-lnk-completion-setup-type-id' function."
          (goto-char pos)
          (when-let ((heading (org-get-heading t t t t)))
            (substring-no-properties heading)))))))
+
+
+;;;;; Help Type Link
+
+;; Reference:
+;; `org-link--open-help'
+;; `org-link--store-help'
+
+;; Setup
+
+;;;###autoload
+(defun org-link-completion-setup-type-help ()
+  (org-link-set-parameters
+   "help"
+   :capf-path 'org-link-completion-path-help
+   :capf-desc 'org-link-completion-desc-help))
+
+;; Path
+
+;;;###autoload
+(defun org-link-completion-path-help ()
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (list
+     path-beg path-end
+     (elisp--completion-local-symbols)
+     :predicate (lambda (sym) (or (fboundp sym)
+                                  (boundp sym)))
+     :company-kind #'elisp--company-kind
+     :company-doc-buffer #'elisp--company-doc-buffer
+     :company-docsig #'elisp--company-doc-string
+     :company-location #'elisp--company-location
+     :company-deprecated #'elisp--company-deprecated)))
+
+;; Description
+
+(defcustom org-link-completion-desc-help-collectors
+  '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-path)
+  "List of functions that collect description completion candidates
+in help link."
+  :group 'org-link-completion-functions
+  :type '(repeat (function)))
+
+;;;###autoload
+(defun org-link-completion-desc-help ()
+  "Complete <desc> of [[help:<symbol>][<desc> at point.
+
+To enable this, call `org-lnk-completion-setup-type-help' function."
+  (org-link-completion-parse-let :desc (desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-call-collectors
+      org-link-completion-desc-help-collectors)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
 
 
 ;;;; Complete From Other Links
