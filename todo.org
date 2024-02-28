@@ -193,3 +193,6 @@ CLOSED: [2024-02-28 Wed 08:56]
 ** DONE helpタイプを補完できるか検討する
 CLOSED: [2024-02-28 Wed 18:16]
 そもそもhelpリンクはhelpの何をターゲットに出来るのかよく知らなかったのだけど、[[elisp-function:org-link--open-help]]を見ると単に関数と変数だけのようだ。describe-functionとdescribe-variableで開く。それならorg-elisp-linkと同じように補完できる。開くのか関数→変数の順。つまりシンボルが重複したらkindは関数を優先すべき。
+** DONE elispタイプを補完する
+CLOSED: [2024-02-28 Wed 21:01]
+[[elisp-function:elisp-completion-at-point]]を呼ぶだけで実現出来ると思う。これは内部で[[elisp-function:with-syntax-table][with-syntax-table]]を使ってelispのsyntax-tableにしてから動いているので、他のモードでもちゃんと補完できるのでは無いか。→一通り試した限り問題ない。

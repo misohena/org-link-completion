@@ -51,6 +51,7 @@
     (org-link-completion-setup-type-file)
     (org-link-completion-setup-type-id)
     (org-link-completion-setup-type-help)
+    (org-link-completion-setup-type-elisp)
     (add-hook 'org-mode-hook
               (lambda ()
                 (add-hook 'completion-at-point-functions
@@ -908,7 +909,7 @@ in coderef format."
 
 ;; Complete links with <type>: part.
 
-;;;;; Unknown Type Link
+;;;;; Unknown Type
 
 (defun org-link-completion-path-unknown-type ()
   (org-link-completion-path-from-other-links))
@@ -917,7 +918,7 @@ in coderef format."
   (org-link-completion-desc-from-other-links))
 
 
-;;;;; File Type Link
+;;;;; File Type
 
 ;;;###autoload
 (defun org-link-completion-setup-type-file ()
@@ -1119,7 +1120,7 @@ An example of an empty filename is: [[file:::*Heading]]"
         (match-string-no-properties 1)))))
 
 
-;;;;; ID Type Link
+;;;;; ID Type
 
 ;; Setup
 
@@ -1300,7 +1301,7 @@ To enable this, call `org-lnk-completion-setup-type-id' function."
            (substring-no-properties heading)))))))
 
 
-;;;;; Help Type Link
+;;;;; Help Type
 
 ;; Reference:
 ;; `org-link--open-help'
@@ -1319,6 +1320,9 @@ To enable this, call `org-lnk-completion-setup-type-id' function."
 
 ;;;###autoload
 (defun org-link-completion-path-help ()
+  "Complete <function-or-variable> of [[help:<function-or-variable> at point.
+
+To enable this, call `org-lnk-completion-setup-type-help' function."
   (org-link-completion-parse-let :path (path-beg path-end)
     (list
      path-beg path-end
@@ -1351,6 +1355,54 @@ To enable this, call `org-lnk-completion-setup-type-help' function."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-help-collectors)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
+
+
+;;;;; Elisp Type
+
+;; Reference:
+;; `org-link--open-elisp'
+
+;; Setup
+
+;;;###autoload
+(defun org-link-completion-setup-type-elisp ()
+  (org-link-set-parameters
+   "elisp"
+   :capf-path 'org-link-completion-path-elisp
+   :capf-desc 'org-link-completion-desc-elisp))
+
+;; Path
+
+;;;###autoload
+(defun org-link-completion-path-elisp ()
+  "Complete <expression> of [[elisp:<expression> at point.
+
+To enable this, call `org-lnk-completion-setup-type-elisp' function."
+  (org-link-completion-parse-let :path ()
+    (elisp-completion-at-point)))
+
+;; Description
+
+(defcustom org-link-completion-desc-elisp-collectors
+  '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-path)
+  "List of functions that collect description completion candidates
+in elisp link."
+  :group 'org-link-completion-functions
+  :type '(repeat (function)))
+
+;;;###autoload
+(defun org-link-completion-desc-elisp ()
+  "Complete <desc> of [[elisp:<expression>][<desc> at point.
+
+To enable this, call `org-lnk-completion-setup-type-elisp' function."
+  (org-link-completion-parse-let :desc (desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-call-collectors
+      org-link-completion-desc-elisp-collectors)
      :kind 'text
      :annotation-function #'org-link-completion-annotation)))
 

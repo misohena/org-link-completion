@@ -46,6 +46,8 @@ You can complete almost anywhere within a link. By default, the following locati
 - [[id: /id/ ][ */description/*
 - [[help: */function-or-variable/*
 - [[help: /function-or-variable/ ][ */description/*
+- [[elisp: */expression/*
+- [[elisp: /expression/ ][ */description/*
 - [[ /unknown-type/ : */path/*
 - [[ /unknown-type/ : /path/ ][ */description/*
 

@@ -111,6 +111,11 @@
   - [[help:track-m
   - [[help:org-link-parameters][
   - [[help:org-link-parameters][Link Parameters]]
+- elisp
+  - [[elisp:
+  - [[elisp:(mess
+  - [[elisp:(message "Hello, World")][
+  - [[elisp:(message "Hello, World")][Show "Hello, World"]]
 - https
   - [[https:
   - [[https://misohena.jp/blog/2024-02-23-org-link-completion-el.html][

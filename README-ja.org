@@ -44,6 +44,8 @@
 - [[id: /id/ ][ */description/*
 - [[help: */function-or-variable/*
 - [[help: /function-or-variable/ ][ */description/*
+- [[elisp: */expression/*
+- [[elisp: /expression/ ][ */description/*
 - [[ /unknown-type/ : */path/*
 - [[ /unknown-type/ : /path/ ][ */description/*
 
