@@ -721,12 +721,8 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 (defun org-link-completion-desc-custom-id ()
   "Complete [[#custom-id][<description> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-call-collectors
-      org-link-completion-desc-custom-id-collectors)
-     :kind 'text)))
+  (org-link-completion-capf-desc-with-collectors
+   org-link-completion-desc-custom-id-collectors))
 
 (defun org-link-completion-collect-custom-id-desc-from-around-target ()
   (org-link-completion-parse-let :desc (path)
@@ -748,12 +744,8 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 (defun org-link-completion-desc-heading ()
   "Complete [[*heading][<description> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-call-collectors
-      org-link-completion-desc-heading-collectors)
-     :kind 'text)))
+  (org-link-completion-capf-desc-with-collectors
+   org-link-completion-desc-heading-collectors))
 
 ;;;;;; Search Target Description
 
@@ -768,12 +760,8 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 (defun org-link-completion-desc-search ()
   "Complete [[My Target][<description> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-call-collectors
-      org-link-completion-desc-search-collectors)
-     :kind 'text)))
+  (org-link-completion-capf-desc-with-collectors
+   org-link-completion-desc-search-collectors))
 
 (defun org-link-completion-collect-search-desc-from-around-target ()
   (org-link-completion-parse-let :desc (path)
@@ -826,12 +814,8 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 (defun org-link-completion-desc-coderef ()
   "Complete [[(coderef)][<description> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-call-collectors
-      org-link-completion-desc-coderef-collectors)
-     :kind 'text)))
+  (org-link-completion-capf-desc-with-collectors
+   org-link-completion-desc-coderef-collectors))
 
 (defun org-link-completion-collect-coderef-desc-from-around-target ()
   (org-link-completion-parse-let :desc (path)
@@ -921,12 +905,8 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
   :type '(repeat (function)))
 
 (defun org-link-completion-desc-unknown-type ()
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-call-collectors
-      org-link-completion-desc-unknown-collectors)
-     :kind 'text)))
+  (org-link-completion-capf-desc-with-collectors
+   org-link-completion-desc-unknown-collectors))
 
 
 ;;;;; File Type
@@ -1049,12 +1029,8 @@ This function also works for `file+sys:' and `file+emacs:' link types."
 ;;;###autoload
 (defun org-link-completion-desc-file ()
   "Complete <filename> of [[<type>:<filename>][<description> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-call-collectors
-      org-link-completion-desc-file-collectors)
-     :kind 'text)))
+  (org-link-completion-capf-desc-with-collectors
+   org-link-completion-desc-file-collectors))
 
 (defun org-link-completion-file-path-part (path)
   (org-link-completion-file-expand-empty
@@ -1263,12 +1239,8 @@ remains, but processing will be faster the next time."
 ;;;###autoload
 (defun org-link-completion-desc-id ()
   "Complete <desc> of [[id:<id>][<desc> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-call-collectors
-      org-link-completion-desc-id-collectors)
-     :kind 'text)))
+  (org-link-completion-capf-desc-with-collectors
+   org-link-completion-desc-id-collectors))
 
 (defun org-link-completion-collect-heading-by-id ()
   (org-link-completion-parse-let :desc (path)
@@ -1331,12 +1303,8 @@ remains, but processing will be faster the next time."
 ;;;###autoload
 (defun org-link-completion-desc-help ()
   "Complete <desc> of [[help:<symbol>][<desc> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-call-collectors
-      org-link-completion-desc-help-collectors)
-     :kind 'text)))
+  (org-link-completion-capf-desc-with-collectors
+   org-link-completion-desc-help-collectors))
 
 
 ;;;;; Elisp Type
@@ -1374,12 +1342,8 @@ remains, but processing will be faster the next time."
 ;;;###autoload
 (defun org-link-completion-desc-elisp ()
   "Complete <desc> of [[elisp:<expression>][<desc> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-call-collectors
-      org-link-completion-desc-elisp-collectors)
-     :kind 'text)))
+  (org-link-completion-capf-desc-with-collectors
+   org-link-completion-desc-elisp-collectors))
 
 
 ;;;;; Info Type
@@ -1472,12 +1436,8 @@ remains, but processing will be faster the next time."
 ;;;###autoload
 (defun org-link-completion-desc-info ()
   "Complete <desc> of [[info:<info-file-node>][<desc> at point."
-  (org-link-completion-parse-let :desc (desc-beg desc-end)
-    (org-link-completion-capf-result
-     desc-beg desc-end
-     (org-link-completion-call-collectors
-      org-link-completion-desc-info-collectors)
-     :kind 'text)))
+  (org-link-completion-capf-desc-with-collectors
+   org-link-completion-desc-info-collectors))
 
 (defcustom org-link-completion-default-info-description "(%F)%N"
   "Default description format for info type links.
@@ -1751,6 +1711,13 @@ and simply return nil."
                              #'org-link-completion-annotation)
                        plist)))
   plist)
+
+(defun org-link-completion-capf-desc-with-collectors (collectors &optional kind)
+  (org-link-completion-parse-let :desc (desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-call-collectors collectors)
+     :kind (or kind 'text))))
 
 ;;;;; Collectors
 
