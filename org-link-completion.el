@@ -427,8 +427,7 @@ To use this, do the following in org-mode buffer:
     ;; Consider the possibility that <type> is <target>.
     ;; For example: [[mytarget .
     org-link-completion-collect-search-target)
-  "List of functions that collect completion candidates for first
-part of link."
+  "Functions that collect candidates for first part of link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -536,8 +535,7 @@ For example:
 
 (defcustom org-link-completion-path-custom-id-collectors
   '(org-link-completion-collect-custom-id)
-  "List of functions that collect path completion candidates in
-CUSTOM-ID format."
+  "Functions that collect completion candidates of path in CUSTOM-ID link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -566,8 +564,7 @@ CUSTOM-ID format."
 
 (defcustom org-link-completion-path-heading-collectors
   '(org-link-completion-collect-heading)
-  "List of functions that collect path completion candidates in
-heading format."
+  "Functions that collect completion candidates of path in heading link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -599,8 +596,7 @@ heading format."
 
 (defcustom org-link-completion-path-coderef-collectors
   '(org-link-completion-collect-coderef)
-  "List of functions that collect path completion candidates in
-coderef format."
+  "Functions that collect completion candidates of path in coderef link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -654,8 +650,7 @@ coderef format."
   ;; Ignore headings, all words.
   '(org-link-completion-collect-dedicated-target
     org-link-completion-collect-element-names)
-  "List of functions that collect path completion candidates in
-search target format."
+  "Functions that collect completion candidates of path in search link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -720,8 +715,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
     org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-custom-id-desc-from-around-target
     org-link-completion-collect-stripped-internal-link-path)
-  "List of functions that collect description completion candidates
-in custom-id format."
+  "Functions that collect candidates of description in CUSTOM-ID link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -748,8 +742,7 @@ in custom-id format."
   '(org-link-completion-collect-description-from-other-links
     org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-stripped-internal-link-path)
-  "List of functions that collect description completion candidates
-in heading format."
+  "Functions that collect candidates of description in heading link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -769,8 +762,7 @@ in heading format."
     org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-search-desc-from-around-target
     org-link-completion-collect-stripped-internal-link-path)
-  "List of functions that collect description completion candidates
-in search target format."
+  "Functions that collect candidates of description in search link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -828,8 +820,7 @@ in search target format."
     org-link-completion-collect-default-coderef-description
     org-link-completion-collect-path
     org-link-completion-collect-coderef-desc-from-around-target)
-  "List of functions that collect description completion candidates
-in coderef format."
+  "Functions that collect candidates of description in coderef link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -910,8 +901,7 @@ in coderef format."
 (defcustom org-link-completion-path-unknown-collectors
   '(org-link-completion-collect-path-from-other-links
     org-link-completion-collect-path-from-favorite-links)
-  "List of functions that collect path completion candidates
-in unknown link."
+  "Functions that collect candidates of path in unknown link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -926,8 +916,7 @@ in unknown link."
 (defcustom org-link-completion-desc-unknown-collectors
   '(org-link-completion-collect-description-from-other-links
     org-link-completion-collect-description-from-favorite-links)
-  "List of functions that collect description completion candidates
-in unknown link."
+  "Functions that collect candidates of description in unknown link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -971,9 +960,7 @@ in unknown link."
 (defun org-link-completion-path-file ()
   "Complete <filename> of [[<type>:<filename> at point.
 
-This function also works for `file+sys:' and `file+emacs:' link types.
-
-To enable this, call `org-lnk-completion-setup-type-file' function."
+This function also works for `file+sys:' and `file+emacs:' link types."
   (org-link-completion-parse-let :path (path-beg path-end)
     (let* ((option-beg
             (org-link-completion-path-file-option-beg path-beg path-end))
@@ -1055,8 +1042,7 @@ To enable this, call `org-lnk-completion-setup-type-file' function."
     org-link-completion-collect-file-base
     org-link-completion-collect-path
     org-link-completion-collect-file-full-path)
-  "List of functions that collect description completion candidates
-in file link."
+  "Functions that collect candidates of description in file link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
@@ -1156,9 +1142,7 @@ An example of an empty filename is: [[file:::*Heading]]"
 
 ;;;###autoload
 (defun org-link-completion-path-id ()
-  "Complete <id> of [[id:<id> at point.
-
-To enable this, call `org-lnk-completion-setup-type-id' function."
+  "Complete <id> of [[id:<id> at point."
   (org-link-completion-parse-let :path (path-beg path-end)
     ;;(message "Enter org-link-completion-path-id")
     (org-link-completion-capf-result
@@ -1272,16 +1256,13 @@ remains, but processing will be faster the next time."
   '(org-link-completion-collect-description-from-other-links
     org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-heading-by-id)
-  "List of functions that collect description completion candidates
-in id link."
+  "Functions that collect candidates of description in id link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 ;;;###autoload
 (defun org-link-completion-desc-id ()
-  "Complete <desc> of [[id:<id>][<desc> at point.
-
-To enable this, call `org-lnk-completion-setup-type-id' function."
+  "Complete <desc> of [[id:<id>][<desc> at point."
   (org-link-completion-parse-let :desc (desc-beg desc-end)
     (org-link-completion-capf-result
      desc-beg desc-end
@@ -1324,9 +1305,7 @@ To enable this, call `org-lnk-completion-setup-type-id' function."
 
 ;;;###autoload
 (defun org-link-completion-path-help ()
-  "Complete <function-or-variable> of [[help:<function-or-variable> at point.
-
-To enable this, call `org-lnk-completion-setup-type-help' function."
+  "Complete <function-or-variable> of [[help:<function-or-variable> at point."
   (org-link-completion-parse-let :path (path-beg path-end)
     (list
      path-beg path-end
@@ -1345,16 +1324,13 @@ To enable this, call `org-lnk-completion-setup-type-help' function."
   '(org-link-completion-collect-description-from-other-links
     org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-path)
-  "List of functions that collect description completion candidates
-in help link."
+  "Functions that collect candidates of description in help link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 ;;;###autoload
 (defun org-link-completion-desc-help ()
-  "Complete <desc> of [[help:<symbol>][<desc> at point.
-
-To enable this, call `org-lnk-completion-setup-type-help' function."
+  "Complete <desc> of [[help:<symbol>][<desc> at point."
   (org-link-completion-parse-let :desc (desc-beg desc-end)
     (org-link-completion-capf-result
      desc-beg desc-end
@@ -1381,9 +1357,7 @@ To enable this, call `org-lnk-completion-setup-type-help' function."
 
 ;;;###autoload
 (defun org-link-completion-path-elisp ()
-  "Complete <expression> of [[elisp:<expression> at point.
-
-To enable this, call `org-lnk-completion-setup-type-elisp' function."
+  "Complete <expression> of [[elisp:<expression> at point."
   (org-link-completion-parse-let :path ()
     (elisp-completion-at-point)))
 
@@ -1393,16 +1367,13 @@ To enable this, call `org-lnk-completion-setup-type-elisp' function."
   '(org-link-completion-collect-description-from-other-links
     org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-path)
-  "List of functions that collect description completion candidates
-in elisp link."
+  "Functions that collect candidates of description in elisp link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 ;;;###autoload
 (defun org-link-completion-desc-elisp ()
-  "Complete <desc> of [[elisp:<expression>][<desc> at point.
-
-To enable this, call `org-lnk-completion-setup-type-elisp' function."
+  "Complete <desc> of [[elisp:<expression>][<desc> at point."
   (org-link-completion-parse-let :desc (desc-beg desc-end)
     (org-link-completion-capf-result
      desc-beg desc-end
@@ -1424,10 +1395,9 @@ To enable this, call `org-lnk-completion-setup-type-elisp' function."
 
 ;; Path
 
+;;;###autoload
 (defun org-link-completion-path-info ()
-  "Complete <info-file-node> of [[info:<info-file-node> at point.
-
-To enable this, call `org-lnk-completion-setup-type-info' function."
+  "Complete <info-file-node> of [[info:<info-file-node> at point."
   (org-link-completion-parse-let :path (path-beg path-end)
     (let* ((file-end (save-excursion
                        (goto-char path-beg)
@@ -1495,16 +1465,13 @@ To enable this, call `org-lnk-completion-setup-type-info' function."
     org-link-completion-collect-default-info-description
     org-link-completion-collect-info-node-name
     org-link-completion-collect-path)
-  "List of functions that collect description completion candidates
-in info link."
+  "Functions that collect candidates of description in info link."
   :group 'org-link-completion-functions
   :type '(repeat (function)))
 
 ;;;###autoload
 (defun org-link-completion-desc-info ()
-  "Complete <desc> of [[info:<info-file-node>][<desc> at point.
-
-To enable this, call `org-lnk-completion-setup-type-info' function."
+  "Complete <desc> of [[info:<info-file-node>][<desc> at point."
   (org-link-completion-parse-let :desc (desc-beg desc-end)
     (org-link-completion-capf-result
      desc-beg desc-end
