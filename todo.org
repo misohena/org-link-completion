@@ -1,6 +1,9 @@
 #+TITLE: やりたいことリスト
 
 * Inbox
+** TODO alist補完でcompletion-stylesを尊重する
+org-link-completion-table-with-alist-searchでの補完は強制的に部分一致になってしまっている。keyとvalueを分けてall-completionsを実行すれば実現出来る？
+
 ** TODO Example Blockの検索方法が正しいか検証する
 とりあえずorg-babel-src-block-regexpの_srcを_exampleに置換して間に合わせたが、それで大丈夫か確認する。
 org-fontify-meta-lines-and-blocks-1でのやり方と一致していれば問題ないと思う。
