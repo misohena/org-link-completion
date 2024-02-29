@@ -52,6 +52,7 @@
     (org-link-completion-setup-type-id)
     (org-link-completion-setup-type-help)
     (org-link-completion-setup-type-elisp)
+    (org-link-completion-setup-type-info)
     (add-hook 'org-mode-hook
               (lambda ()
                 (add-hook 'completion-at-point-functions
@@ -1142,24 +1143,8 @@ To enable this, call `org-lnk-completion-setup-type-id' function."
     ;;(message "Enter org-link-completion-path-id")
     (org-link-completion-capf-result
      path-beg path-end
-     ;; I used the idea from the following URL as a reference.
-     ;; https://emacs.stackexchange.com/a/74550
-     ;; completion - completing-read, search also in annotations -
-     ;; Emacs Stack Exchange
-     (lambda (string predicate action)
-       ;;(message "Complete id action:%s string:%s" action string)
-       (pcase action
-         ('t (cl-loop for cell in (org-link-completion-get-id-cache)
-                      for id = (car cell)
-                      for heading = (cdr cell)
-                      when (and
-                            (or (null predicate)
-                                (funcall predicate cell))
-                            (or (string-search string id) ;; TODO: Ignore case?
-                                (let ((case-fold-search t)) ;; Ignore case!
-                                  (string-match-p (regexp-quote string)
-                                                  heading))))
-                      collect id))))
+     (org-link-completion-table-with-alist-search
+      #'org-link-completion-get-id-cache)
      :kind 'text
      :annotation-function #'org-link-completion-annotation)))
 
@@ -1407,6 +1392,146 @@ To enable this, call `org-lnk-completion-setup-type-elisp' function."
      :annotation-function #'org-link-completion-annotation)))
 
 
+;;;;; Info Type
+
+;; Setup
+
+;;;###autoload
+(defun org-link-completion-setup-type-info ()
+  (org-link-set-parameters
+   "info"
+   :capf-path 'org-link-completion-path-info
+   :capf-desc 'org-link-completion-desc-info))
+
+;; Path
+
+(defun org-link-completion-path-info ()
+  "Complete <info-file-node> of [[info:<info-file-node> at point.
+
+To enable this, call `org-lnk-completion-setup-type-info' function."
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (let* ((file-end (save-excursion
+                       (goto-char path-beg)
+                       (skip-chars-forward "^#" path-end)
+                       (point)))
+           (on-nodename (and (< file-end path-end) ;; Found #
+                             (< file-end (point)))))
+
+      (if on-nodename
+          ;; [[info:<filename>#<nodename>
+          (let ((filename (buffer-substring-no-properties path-beg file-end)))
+            (org-link-completion-capf-result
+             (1+ file-end) path-end
+             (org-link-completion-collect-info-node-names filename)
+             :kind 'text
+             :annotation-function #'org-link-completion-annotation))
+        ;; [[info:<filename>
+        (org-link-completion-capf-result
+         path-beg file-end ;; Include #
+         (org-link-completion-table-with-alist-search
+          #'org-link-completion-collect-info-file-title-alist)
+         :kind 'file
+         :annotation-function #'org-link-completion-annotation)))))
+
+(autoload 'Info-speedbar-fetch-file-nodes "info")
+(defun org-link-completion-collect-info-file-title-alist ()
+  "Return an alist of info files and their titles."
+  (cl-loop for (title . (filename . nodename))
+           in (org-link-completion-collect-info-sub-nodes "dir" "Top")
+           collect (cons (org-link-completion-annotate (concat filename "#")
+                                                       title)
+                         title)))
+
+(defun org-link-completion-collect-info-sub-nodes (filename nodename)
+  ;; Reference:
+  ;; - `Info-speedbar-fetch-file-nodes'
+  ;; - `Info-menu'
+  (cl-loop for (title . node) in (Info-speedbar-fetch-file-nodes
+                                  (format "(%s)%s" filename nodename))
+           when (string-match "\\`(\\([^)]+\\))\\(.*\\)\\'" node)
+           collect (cons (substring-no-properties title)
+                         (cons (match-string-no-properties 1 node)
+                               (match-string-no-properties 2 node)))))
+
+(autoload 'Info-find-file "info")
+(autoload 'info-insert-file-contents "info")
+(autoload 'Info-following-node-name "info")
+(defun org-link-completion-collect-info-node-names (file)
+  ;; See: `Info-toc-build'
+  (let (names
+        (file-path (Info-find-file file t)))
+    (when file-path
+      (with-temp-buffer
+        (info-insert-file-contents file-path)
+        (goto-char (point-min))
+        (while (and (search-forward "\n\^_\nFile:" nil 'move)
+                    (search-forward "Node: " nil 'move))
+          (push (substring-no-properties (Info-following-node-name)) names)))
+      (nreverse names))))
+
+
+;; Description
+
+(defcustom org-link-completion-desc-info-collectors
+  '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-default-info-description
+    org-link-completion-collect-info-node-name
+    org-link-completion-collect-path)
+  "List of functions that collect description completion candidates
+in info link."
+  :group 'org-link-completion-functions
+  :type '(repeat (function)))
+
+;;;###autoload
+(defun org-link-completion-desc-info ()
+  "Complete <desc> of [[info:<info-file-node>][<desc> at point.
+
+To enable this, call `org-lnk-completion-setup-type-info' function."
+  (org-link-completion-parse-let :desc (desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-call-collectors
+      org-link-completion-desc-info-collectors)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
+
+(defcustom org-link-completion-default-info-description "(%F)%N"
+  "Default description format for info type links.
+
+Used by the
+`org-link-completion-collect-default-info-description' function."
+  :group 'org-link-completion
+  :type 'string)
+
+(defun org-link-completion-default-info-description (file node)
+  (replace-regexp-in-string "%[FN]"
+                            (lambda (str)
+                              (pcase str
+                                ("%F" file)
+                                ("%N" node)
+                                (_ "")))
+                            org-link-completion-default-info-description
+                            t))
+
+(defun org-link-completion-collect-default-info-description ()
+  (org-link-completion-parse-let :desc (path)
+    (when-let ((pos (seq-position path ?#)))
+      (org-link-completion-string-list
+       (org-link-completion-annotate
+        (org-link-completion-default-info-description
+         (substring path 0 pos)
+         (substring path (1+ pos)))
+        "Format")))))
+
+(defun org-link-completion-collect-info-node-name ()
+  (org-link-completion-parse-let :desc (path)
+    (when-let ((pos (seq-position path ?#)))
+      (org-link-completion-string-list
+       (org-link-completion-annotate
+        (substring path (1+ pos))
+        "Node Name")))))
+
+
 ;;;; Complete From Other Links
 
 ;; Complete path and description from those used in other links.
@@ -1512,6 +1637,28 @@ and simply return nil."
     (org-link-completion-table-with-metadata
      table
      '((display-sort-function . identity)))))
+
+(defun org-link-completion-table-with-alist-search (fun-collect-alist)
+  ;; I used the idea from the following URL as a reference.
+  ;; https://emacs.stackexchange.com/a/74550
+  ;; completion - completing-read, search also in annotations -
+  ;;  Emacs Stack Exchange
+  (lambda (string predicate action)
+    ;;(message "Complete alist action:%s string:%s" action string)
+    (pcase action
+      ('t (cl-loop with string-re = (regexp-quote string)
+                   for cell in (funcall fun-collect-alist)
+                   for key = (car cell)
+                   for value = (cdr cell)
+                   when (and
+                         (or (null predicate)
+                             (funcall predicate cell))
+                         ;; TODO: respect completion style? Use all-completios?
+                         (or (let ((case-fold-search t)) ;; Ignore case (?)
+                               (string-match-p string-re key))
+                             (let ((case-fold-search t)) ;; Ignore case (?)
+                               (string-match-p string-re value))))
+                   collect key)))))
 
 ;;;;; Return value of completion-at-point-functions
 

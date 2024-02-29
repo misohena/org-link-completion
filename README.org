@@ -48,6 +48,9 @@ You can complete almost anywhere within a link. By default, the following locati
 - [[help: /function-or-variable/ ][ */description/*
 - [[elisp: */expression/*
 - [[elisp: /expression/ ][ */description/*
+- [[info: */infofile/*
+- [[info: /infofile/ # */nodename/*
+- [[info: /infofile/ # /nodename/ ][ */description/*
 - [[ /unknown-type/ : */path/*
 - [[ /unknown-type/ : /path/ ][ */description/*
 

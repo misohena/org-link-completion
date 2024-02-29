@@ -31,7 +31,6 @@ org-fontify-meta-lines-and-blocks-1でのやり方と一致していれば問題
 http、https経由でhtmlやorgファイルをダウンロードしてファイルと同じように解析する。
 さすがにやり過ぎなのでデフォルトで無効にする？
 
-** TODO infoタイプを補完できるか検討する
 ** TODO fileの説明部分などで重複が発生しているのをどうするか
 直す？　アノテーションを付けるなら重複していても仕方ないかもしれないけど。
 ** TODO coderefの補完範囲の終端は)までにすべきでは？
@@ -56,6 +55,18 @@ http、https経由でhtmlやorgファイルをダウンロードしてファイ�
 
 ** TODO org-link-completion-call-with-file-findを廃止する
 org-link-completion-call-with-fileを使えば問題ないはず。
+** TODO collectorsを使う補完関数を作りやすくする？
+defcustomとdefunの両方を定義する必要があり、その内容も全て大部分が似通っている。
+org-link-completion-define-capf-with-collectorsみたいな名前のマクロでも作る？
+利点は色々ある。コード量が短くなり、コピペによるミスが減り(実際-helpを作ったのに-idが残っていたりした)、全体に対する修正時も一括で出来る。
+問題は知らない人がぱっと見で理解しづらいということ。カスタマイズ変数と関数があることが分かりづらい。
+
+** TODO 候補をキャッシュする一般的な仕組みを作る
+idタイプのためにキャッシュを保持する仕組みを作った。
+completion-in-region-modeの終了時にキャッシュをクリアする。または、最後に呼び出されてからタイムアウト時間が経過したら次回キャッシュをクリアしてから再度始める。
+[[elisp-function:completion-table-with-cache]]よりは良い仕組みだと思う。
+他でも使えると思うので、一般的な仕組みを用意したい。
+
 * Finished
 ** DONE 「#」で始まる内部リンクを補完する(customid)
 CLOSED: [2024-02-24 Sat 13:30]
@@ -196,3 +207,52 @@ CLOSED: [2024-02-28 Wed 18:16]
 ** DONE elispタイプを補完する
 CLOSED: [2024-02-28 Wed 21:01]
 [[elisp-function:elisp-completion-at-point]]を呼ぶだけで実現出来ると思う。これは内部で[[elisp-function:with-syntax-table][with-syntax-table]]を使ってelispのsyntax-tableにしてから動いているので、他のモードでもちゃんと補完できるのでは無いか。→一通り試した限り問題ない。
+** DONE infoタイプを補完できるか検討する
+CLOSED: [2024-02-29 Thu 15:04]
+[[elisp-library:ol-info][ol-info.el]]に実装がある。
+
+形式は「info: (file-name-nondirectory Info-current-file) # Info-current-node」となっている。
+
+[[elisp-function:Info-speedbar-hierarchy-buttons]] や [[elisp-function:Info-speedbar-fetch-file-nodes]] という関数があって、それが参考になるかもしれない。
+
+[[elisp-function:Info-speedbar-fetch-file-nodes]]がやっているのは:
+1. テンポラリバッファを作る
+2. Info-modeを立ち上げる
+3. (Info-find-node <filename> <nodename>)でノードをバッファに読み込む(最初は"dir" "Top")
+4. 正規表現で検索してサブノードを列挙する
+   1. 一つ目の行頭 * ～: まで読み飛ばす。dirだと * Menu: となっている。
+   2. 次以降の * ～: を検索する(コロン以降のテキストはinvisibleになっている)。
+      1. ～の部分をnameとする。
+      2. - 空白(…)― => (…)―
+         - 空白(…). => (…)Top
+         - 空白△. => ( thisfile )△
+         - それ以外 => ( thisfile )～
+まぁ、この関数を呼んでしまえば済む気がする。
+
+#+begin_src elisp
+(cl-loop for (key . value) in (Info-speedbar-fetch-file-nodes "(dir)Top")
+         collect (cons (substring-no-properties key) (substring-no-properties value)))
+#+end_src
+
+~#~ の前か後かで処理を分けるべき。
+~#~ の前ならファイル名だけを補完する。
+~#~ の後ならノード名を補完する。
+
+問題点:
+1. fileタイプのoption-begと同じ、解析情報の保持の問題
+2. idタイプと同じ、検索に使うタイトルと補完すべきファイル名が一致しない問題
+3. #の後は階層毎に検索して最終的なノード名を得るのが望ましいが、難しい、ないし、ユーザーに分かりづらい問題(Emacs/Basic/Inserting Textと指定したら emacs#Inserting Text となるような補完をしたい)
+4. 階層を無視して直接ノード名を指定する場合、全ノード名を一括で取得する方法
+
+1と2は力業で何とかなる問題。もちろん何か補助する仕組みが出来ればそれに越したことはない。4も調べたら分かるだろう。問題は3。つまり、ユーザーに一覧として何を表示して、何を入力してもらうか。
+
+最初はidタイプと同じ手法でファイル名とそのタイトルで検索してファイル名を補完すべき。問題は#以降。
+
+- #の後ではトップノード一覧
+- 有効なノード名の後では、そのノード名と、サブノード一覧
+
+というのはどうだろう。
+
+うーん、結局単純なケースがうまくいかない。例えば ファイル名# の後に深い場所にあるノード名を途中まで入力して補完する場合、結局全ノードから候補を探すしかない。
+
+とりあえず全ノードを名を一括で取得してそれを補完候補にする方法で実装する。

@@ -116,6 +116,11 @@
   - [[elisp:(mess
   - [[elisp:(message "Hello, World")][
   - [[elisp:(message "Hello, World")][Show "Hello, World"]]
+- info
+  - [[info:
+  - [[info:elisp#
+  - [[info:org#Hyperlinks][
+  - [[info:org#Hyperlinks][Hyperlinks - Org Manual]]
 - https
   - [[https:
   - [[https://misohena.jp/blog/2024-02-23-org-link-completion-el.html][
