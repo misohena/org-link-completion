@@ -439,8 +439,7 @@ part of link."
      type-beg
      (if (eq (char-after type-end) ?:) (1+ type-end) type-end)
      (org-link-completion-call-collectors
-      org-link-completion-type-collectors)
-     :annotation-function #'org-link-completion-annotation)))
+      org-link-completion-type-collectors))))
 
 (defun org-link-completion-collect-type-part-internal-link-prefix-chars ()
   (list
@@ -549,8 +548,7 @@ CUSTOM-ID format."
      (1+ path-beg) path-end
      (org-link-completion-call-collectors
       org-link-completion-path-custom-id-collectors)
-     :kind 'keyword
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'keyword)))
 
 (defun org-link-completion-collect-custom-id ()
   "Collect all :CUSTOM_ID: property values from the current buffer."
@@ -582,8 +580,7 @@ heading format."
      (1+ path-beg) path-end
      (org-link-completion-call-collectors
       org-link-completion-path-heading-collectors)
-     :kind 'folder
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'folder)))
 
 (defun org-link-completion-collect-heading ()
   "Collect all heading text from the current buffer."
@@ -616,8 +613,7 @@ coderef format."
      (1+ path-beg) path-end
      (org-link-completion-call-collectors
       org-link-completion-path-coderef-collectors)
-     :kind 'reference
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'reference)))
 
 (defun org-link-completion-collect-coderef ()
   "Collect all coderef labels (ref:<label>) from the current buffer."
@@ -671,8 +667,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
     (org-link-completion-capf-result
      path-beg path-end
      (org-link-completion-collect-search-target)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defun org-link-completion-collect-search-target ()
   "Collect all search target strings from the current buffer."
@@ -737,8 +732,7 @@ in custom-id format."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-custom-id-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defun org-link-completion-collect-custom-id-desc-from-around-target ()
   (org-link-completion-parse-let :desc (path)
@@ -766,8 +760,7 @@ in heading format."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-heading-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 ;;;;;; Search Target Description
 
@@ -788,8 +781,7 @@ in search target format."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-search-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defun org-link-completion-collect-search-desc-from-around-target ()
   (org-link-completion-parse-let :desc (path)
@@ -848,8 +840,7 @@ in coderef format."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-coderef-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defun org-link-completion-collect-coderef-desc-from-around-target ()
   (org-link-completion-parse-let :desc (path)
@@ -930,8 +921,7 @@ in unknown link."
      path-beg path-end
      (org-link-completion-call-collectors
       org-link-completion-path-unknown-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defcustom org-link-completion-desc-unknown-collectors
   '(org-link-completion-collect-description-from-other-links
@@ -947,8 +937,7 @@ in unknown link."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-unknown-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 
 ;;;;; File Type
@@ -1052,8 +1041,7 @@ To enable this, call `org-lnk-completion-setup-type-file' function."
    (nconc
     additional
     (org-link-completion-call-with-file-find file fun))
-   :kind 'text
-   :annotation-function #'org-link-completion-annotation))
+   :kind 'text))
 
 
 ;; Description
@@ -1080,8 +1068,7 @@ in file link."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-file-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defun org-link-completion-file-path-part (path)
   (org-link-completion-file-expand-empty
@@ -1178,8 +1165,7 @@ To enable this, call `org-lnk-completion-setup-type-id' function."
      path-beg path-end
      (org-link-completion-table-with-alist-search
       #'org-link-completion-get-id-cache)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 ;; Collect ID and Headings
 
@@ -1301,8 +1287,7 @@ To enable this, call `org-lnk-completion-setup-type-id' function."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-id-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defun org-link-completion-collect-heading-by-id ()
   (org-link-completion-parse-let :desc (path)
@@ -1375,8 +1360,7 @@ To enable this, call `org-lnk-completion-setup-type-help' function."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-help-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 
 ;;;;; Elisp Type
@@ -1424,8 +1408,7 @@ To enable this, call `org-lnk-completion-setup-type-elisp' function."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-elisp-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 
 ;;;;; Info Type
@@ -1459,15 +1442,13 @@ To enable this, call `org-lnk-completion-setup-type-info' function."
             (org-link-completion-capf-result
              (1+ file-end) path-end
              (org-link-completion-collect-info-node-names filename)
-             :kind 'text
-             :annotation-function #'org-link-completion-annotation))
+             :kind 'text))
         ;; [[info:<filename>
         (org-link-completion-capf-result
          path-beg file-end ;; Include #
          (org-link-completion-table-with-alist-search
           #'org-link-completion-collect-info-file-title-alist)
-         :kind 'file
-         :annotation-function #'org-link-completion-annotation)))))
+         :kind 'file)))))
 
 (autoload 'Info-speedbar-fetch-file-nodes "info")
 (defun org-link-completion-collect-info-file-title-alist ()
@@ -1529,8 +1510,7 @@ To enable this, call `org-lnk-completion-setup-type-info' function."
      desc-beg desc-end
      (org-link-completion-call-collectors
       org-link-completion-desc-info-collectors)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defcustom org-link-completion-default-info-description "(%F)%N"
   "Default description format for info type links.
@@ -1581,8 +1561,7 @@ Used by the
     (org-link-completion-capf-result
      path-beg path-end
      (org-link-completion-collect-path-from-other-links)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defun org-link-completion-collect-path-from-other-links ()
   (org-link-completion-parse-let nil (type-beg type-end)
@@ -1612,8 +1591,7 @@ Used by the
     (org-link-completion-capf-result
      desc-beg desc-end
      (org-link-completion-collect-description-from-other-links)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defun org-link-completion-collect-description-from-other-links (&optional
                                                                  link-beg
@@ -1692,8 +1670,7 @@ completion candidates."
     (org-link-completion-capf-result
      path-beg path-end
      (org-link-completion-collect-path-from-favorite-links)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defun org-link-completion-collect-path-from-favorite-links ()
   (org-link-completion-parse-let :path (type)
@@ -1708,8 +1685,7 @@ completion candidates."
     (org-link-completion-capf-result
      desc-beg desc-end
      (org-link-completion-collect-description-from-favorite-links)
-     :kind 'text
-     :annotation-function #'org-link-completion-annotation)))
+     :kind 'text)))
 
 (defun org-link-completion-collect-description-from-favorite-links ()
   (org-link-completion-parse-let :desc (type path)
@@ -1790,17 +1766,24 @@ and simply return nil."
            (org-link-completion-capf-result-convert-properties plist))))
 
 (defun org-link-completion-capf-result-convert-properties (plist)
-  (cl-loop for (key value) on plist by #'cddr
-           nconc
-           (pcase key
-             ;; :kind <symbol>|<function>
-             (:kind
-              (list :company-kind
-                    (if (functionp value)
-                        value
-                      (let ((kind value)) (lambda (_) kind)))))
-             (_
-              (list key value)))))
+  (setq plist
+        (cl-loop for (key value) on plist by #'cddr
+                 nconc
+                 (pcase key
+                   ;; :kind <symbol>|<function>
+                   (:kind
+                    (list :company-kind
+                          (if (functionp value)
+                              value
+                            (let ((kind value)) (lambda (_) kind)))))
+                   (_
+                    (list key value)))))
+  ;; Add :annotate-function if not specified.
+  (unless (plist-member plist :annotation-function)
+    (setq plist (nconc (list :annotation-function
+                             #'org-link-completion-annotation)
+                       plist)))
+  plist)
 
 ;;;;; Collectors
 
