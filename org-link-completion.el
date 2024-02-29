@@ -722,6 +722,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 (defcustom org-link-completion-desc-custom-id-collectors
   '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-custom-id-desc-from-around-target
     org-link-completion-collect-stripped-internal-link-path)
   "List of functions that collect description completion candidates
@@ -751,6 +752,7 @@ in custom-id format."
 
 (defcustom org-link-completion-desc-heading-collectors
   '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-stripped-internal-link-path)
   "List of functions that collect description completion candidates
 in heading format."
@@ -771,6 +773,7 @@ in heading format."
 
 (defcustom org-link-completion-desc-search-collectors
   '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-search-desc-from-around-target
     org-link-completion-collect-stripped-internal-link-path)
   "List of functions that collect description completion candidates
@@ -829,6 +832,7 @@ in search target format."
 
 (defcustom org-link-completion-desc-coderef-collectors
   '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-default-coderef-description
     org-link-completion-collect-path
     org-link-completion-collect-coderef-desc-from-around-target)
@@ -912,11 +916,39 @@ in coderef format."
 
 ;;;;; Unknown Type
 
+(defcustom org-link-completion-path-unknown-collectors
+  '(org-link-completion-collect-path-from-other-links
+    org-link-completion-collect-path-from-favorite-links)
+  "List of functions that collect path completion candidates
+in unknown link."
+  :group 'org-link-completion-functions
+  :type '(repeat (function)))
+
 (defun org-link-completion-path-unknown-type ()
-  (org-link-completion-path-from-other-links))
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (org-link-completion-capf-result
+     path-beg path-end
+     (org-link-completion-call-collectors
+      org-link-completion-path-unknown-collectors)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
+
+(defcustom org-link-completion-desc-unknown-collectors
+  '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-description-from-favorite-links)
+  "List of functions that collect description completion candidates
+in unknown link."
+  :group 'org-link-completion-functions
+  :type '(repeat (function)))
 
 (defun org-link-completion-desc-unknown-type ()
-  (org-link-completion-desc-from-other-links))
+  (org-link-completion-parse-let :desc (desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-call-collectors
+      org-link-completion-desc-unknown-collectors)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
 
 
 ;;;;; File Type
@@ -1028,6 +1060,7 @@ To enable this, call `org-lnk-completion-setup-type-file' function."
 
 (defcustom org-link-completion-desc-file-collectors
   '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-org-file-title
     ;; TODO: Get titles from more file formats
     org-link-completion-collect-file-name
@@ -1251,6 +1284,7 @@ remains, but processing will be faster the next time."
 
 (defcustom org-link-completion-desc-id-collectors
   '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-heading-by-id)
   "List of functions that collect description completion candidates
 in id link."
@@ -1324,6 +1358,7 @@ To enable this, call `org-lnk-completion-setup-type-help' function."
 
 (defcustom org-link-completion-desc-help-collectors
   '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-path)
   "List of functions that collect description completion candidates
 in help link."
@@ -1372,6 +1407,7 @@ To enable this, call `org-lnk-completion-setup-type-elisp' function."
 
 (defcustom org-link-completion-desc-elisp-collectors
   '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-path)
   "List of functions that collect description completion candidates
 in elisp link."
@@ -1474,6 +1510,7 @@ To enable this, call `org-lnk-completion-setup-type-info' function."
 
 (defcustom org-link-completion-desc-info-collectors
   '(org-link-completion-collect-description-from-other-links
+    org-link-completion-collect-description-from-favorite-links
     org-link-completion-collect-default-info-description
     org-link-completion-collect-info-node-name
     org-link-completion-collect-path)
@@ -1536,7 +1573,7 @@ Used by the
 
 ;; Complete path and description from those used in other links.
 
-;;;;; Path from Other Links
+;; Path
 
 (defun org-link-completion-path-from-other-links ()
   "Complete the path at point from other links."
@@ -1567,7 +1604,7 @@ Used by the
           table)))))
 
 
-;;;;; Description from Other Links
+;; Description
 
 (defun org-link-completion-desc-from-other-links ()
   "Complete the description at point from other links."
@@ -1597,6 +1634,90 @@ Used by the
                    collect (org-link-completion-annotate
                             (match-string-no-properties 1)
                             "Others")))))))
+
+
+;;;; Favorite Links
+
+;; Favorite Links
+
+(defcustom org-link-completion-favorite-links
+  '(("https"
+     ("//www.gnu.org/software/emacs/" "GNU Emacs")))
+  "Path and description of the link you want to include as
+completion candidates."
+  :group 'org-link-completion
+  :type '(alist :tag "Link Types"
+                :key-type (string :tag "Type")
+                :value-type (repeat
+                             (list (string :tag "Path")
+                                   (choice (const :tag "No Description" nil)
+                                           (string :tag "Description"))))))
+
+(defun org-link-completion-add-to-favorite-links ()
+  "Add link at point to favorites."
+  (interactive)
+  (let ((element (org-element-context)))
+    (unless (eq (org-element-type element) 'link)
+      (error "No link at point"))
+    (let* ((type (org-element-property :type element))
+           (path (org-element-property :path element))
+           (desc-beg (org-element-property :contents-begin element))
+           (desc-end (org-element-property :contents-end element))
+           (desc (and desc-beg desc-end
+                      (buffer-substring-no-properties desc-beg desc-end)))
+           (type (cond
+                  ((member type '("fuzzy" "custom-id" "coderef")) "")
+                  ((assoc type org-link-parameters) type)
+                  (t (error "Unknown link type `%s'" type))))
+           (favorite-links (copy-tree org-link-completion-favorite-links))
+           (type-cell (assoc type favorite-links))
+           (path-desc (list path desc)))
+      (unless type-cell
+        (push (setq type-cell (cons type nil))
+              favorite-links))
+      (when (member path-desc (cdr type-cell))
+        (error "Already in favorite links"))
+      (push path-desc (cdr type-cell))
+
+      (setq org-link-completion-favorite-links favorite-links)
+      (customize-save-variable 'org-link-completion-favorite-links
+                               org-link-completion-favorite-links)
+      (message "Added type:%s path:%s description:%s" type path desc))))
+
+;; Path
+
+(defun org-link-completion-path-from-favorite-links ()
+  "Complete the path at point from favorite links."
+  (org-link-completion-parse-let :path (path-beg path-end)
+    (org-link-completion-capf-result
+     path-beg path-end
+     (org-link-completion-collect-path-from-favorite-links)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
+
+(defun org-link-completion-collect-path-from-favorite-links ()
+  (org-link-completion-parse-let :path (type)
+    (mapcar #'car (alist-get type org-link-completion-favorite-links
+                             nil nil #'string=))))
+
+;; Description
+
+(defun org-link-completion-desc-from-favorite-links ()
+  "Complete the description at point from favorite links."
+  (org-link-completion-parse-let :desc (desc-beg desc-end)
+    (org-link-completion-capf-result
+     desc-beg desc-end
+     (org-link-completion-collect-description-from-favorite-links)
+     :kind 'text
+     :annotation-function #'org-link-completion-annotation)))
+
+(defun org-link-completion-collect-description-from-favorite-links ()
+  (org-link-completion-parse-let :desc (type path)
+    (cl-loop for (favorite-path favorite-desc)
+             in (alist-get type org-link-completion-favorite-links
+                           nil nil #'string=)
+             when (equal path favorite-path)
+             collect (org-link-completion-annotate favorite-desc "Favorites"))))
 
 
 ;;;; Utilities for completion

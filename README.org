@@ -54,7 +54,7 @@ You can complete almost anywhere within a link. By default, the following locati
 - [[ /unknown-type/ : */path/*
 - [[ /unknown-type/ : /path/ ][ */description/*
 
-Completion candidates are collected from the link destination and its surroundings, other similar links, syntactic constraints, the path part of the link (when completing the description part), etc.
+Completion candidates are collected from the link destination and its surroundings, other similar links, syntactic constraints, the path part of the link (when completing the description part), links added to favorites, etc.
 
 Completion functions can be changed and added to all of these parts.
 

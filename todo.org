@@ -67,6 +67,8 @@ completion-in-region-modeの終了時にキャッシュをクリアする。ま�
 [[elisp-function:completion-table-with-cache]]よりは良い仕組みだと思う。
 他でも使えると思うので、一般的な仕組みを用意したい。
 
+** TODO 好きなリンクを候補に加える仕組みを作る
+org-link-completion-favorit-links
 * Finished
 ** DONE 「#」で始まる内部リンクを補完する(customid)
 CLOSED: [2024-02-24 Sat 13:30]

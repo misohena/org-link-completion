@@ -125,6 +125,8 @@
   - [[https:
   - [[https://misohena.jp/blog/2024-02-23-org-link-completion-el.html][
   - [[https://misohena.jp/blog/]]
+  - [[https://www.gnu
+  - [[https://www.gnu.org/software/emacs/][
 
 * Unsupported
 - Outside Text
