@@ -20,10 +20,16 @@ org-fontify-meta-lines-and-blocks-1でのやり方と一致していれば問題
 ** TODO idを補完した後に][を挿入したり、説明部を補完した後に]]を挿入したい
 ** TODO pathの補完終了時に][を挿入する
 ** TODO ]と[の間等で補完できるようにする
-- |[[ => [[を補完する
+すでにあるならそれを補完すれば良い。
+- |[[ => +[[を補完する+ 何もしない?
 - [|[ => [を補完する
 - ]|[ => [を補完する
 - ]|] => ]を補完する
+- ]]| => 何もしない
+無いなら
+- | => リンクと分からない
+- [| => リンクと分からない
+- ]| => [か]を補完する
 - ]]| => 何もしない
 
 ** TODO htmlファイルのタイトルを補完する
@@ -55,6 +61,7 @@ http、https経由でhtmlやorgファイルをダウンロードしてファイ�
 
 ** TODO org-link-completion-call-with-file-findを廃止する
 org-link-completion-call-with-fileを使えば問題ないはず。
+
 ** TODO collectorsを使う補完関数を作りやすくする？
 defcustomとdefunの両方を定義する必要があり、その内容も全て大部分が似通っている。
 org-link-completion-define-capf-with-collectorsみたいな名前のマクロでも作る？
@@ -67,8 +74,14 @@ completion-in-region-modeの終了時にキャッシュをクリアする。ま�
 [[elisp-function:completion-table-with-cache]]よりは良い仕組みだと思う。
 他でも使えると思うので、一般的な仕組みを用意したい。
 
-** TODO 好きなリンクを候補に加える仕組みを作る
-org-link-completion-favorit-links
+** TODO お気に入りリンクが一部のタイプのパスに適用されない
+file、id、help、elisp、infoといった専用の補完関数を用意してあるタイプのパスに適用されない。
+fileはやっかい。
+
+** TODO お気に入りリンクを専用のファイルに保存できるようにする
+方が良いかもしれない。でも勝手に作られるのを嫌がる人もいるだろう。
+customizeの方が手軽だと思う人もいるかもしれない。
+選択出来るようにするしか。
 * Finished
 ** DONE 「#」で始まる内部リンクを補完する(customid)
 CLOSED: [2024-02-24 Sat 13:30]
@@ -258,3 +271,6 @@ CLOSED: [2024-02-29 Thu 15:04]
 うーん、結局単純なケースがうまくいかない。例えば ファイル名# の後に深い場所にあるノード名を途中まで入力して補完する場合、結局全ノードから候補を探すしかない。
 
 とりあえず全ノードを名を一括で取得してそれを補完候補にする方法で実装する。
+** DONE 好きなリンクを候補に加える仕組みを作る
+CLOSED: [2024-02-29 Thu 18:41]
+org-link-completion-favorit-links
