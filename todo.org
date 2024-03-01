@@ -1,6 +1,11 @@
 #+TITLE: やりたいことリスト
 
 * Inbox
+** TODO エスケープシーケンスが絡んだ解析不能パターンを何とかする
+~[[file:\[bracket\]][~ ←が解析できない。おそらく ] が二回出現するから？
+
+** TODO タイプ無しリンクでも他リンクからの補完をすべきでは？
+現在 org-link-completion-collect-path-from-other-links はタイプが空だと何もしない。内部リンクやタイプなしファイルリンクで他リンクからの補完が出来ない。
 
 ** TODO Example Blockの検索方法が正しいか検証する
 とりあえずorg-babel-src-block-regexpの_srcを_exampleに置換して間に合わせたが、それで大丈夫か確認する。
@@ -11,6 +16,11 @@ org-fontify-meta-lines-and-blocks-1でのやり方と一致していれば問題
 ** TODO テキストプロパティを見て解析を高速化することは出来る？
 ** TODO リンクの開始点を必ずしも正確に特定できない問題は解決できる？
 左に戻りながら調べて最初に現れた[[で停止するようになっている。なので、descriptionの中に[[があったらそこがリンクの始まりだと誤認してしまう。それが嫌ならずいぶん前から解析をしなければならない(行頭からとも限らない。複数行に跨がるリンクは存在しうるから)。大人しくorg-elementを使った方が？　もちろんポイントのあるリンクは完成しているとは限らないので直接的には調べられない。
+
+** TODO 説明部の[[も[@@-:@@[にすべき？
+本来は不要だが、org-link-completionはリンクの先頭を誤認してしまうので。
+ただ、行頭からスキャンしていけば済む話ではある。
+([[*リンクの開始点を必ずしも正確に特定できない問題は解決できる？][リンクの開始点を必ずしも正確に特定できない問題は解決できる？]])
 
 ** TODO ソースコードブロックの中で反応しないようにする
 ただしorg-modeのソースコードブロックは除く？？
@@ -47,6 +57,14 @@ idはdescriptionを入れる可能性がひときわ高いと思う。idだけ�
 )を含めるべきではないなら)があるときは一つ前にすべきでは？
 [[*coderefの)を補完する][coderefの)を補完する]]をどうするかにもよる。
 ** TODO idを補完した後に][を挿入したり、説明部を補完した後に]]を挿入したい
+** TODO そもそもidはpathの補完で説明部まで補完していいのでは？
+リンクの末尾まで候補文字列に入れてしまえば一発でリンクが完成して便利。
+alistの補完で頭を悩ませる必要も無い。
+もちろん説明部を変えたい場合は逆に手間だけど(BackSpaceして]に対応する[に戻るだけではある)。
+
+** TODO pathの時点でどこまで補完するかの設定を追加する
+オプションで説明部まで含めてリンクの最後まで補完できるようにする。
+
 ** TODO pathの補完終了時に][を挿入する
 ** TODO ]と[の間等で補完できるようにする
 すでにあるならそれを補完すれば良い。
@@ -87,6 +105,9 @@ http、https経由でhtmlやorgファイルをダウンロードしてファイ�
 ** TODO org-link-completion-call-with-file-findを廃止する
 org-link-completion-call-with-fileを使えば問題ないはず。
 
+** TODO infoの説明部分の補完でTopの時はファイルのタイトルにする
+~[[info:magit#Top][~ ←このタイミングで、Magit User Manual とかを候補に出すべき。
+
 ** TODO 候補をキャッシュする一般的な仕組みを作る
 idタイプのためにキャッシュを保持する仕組みを作った。
 completion-in-region-modeの終了時にキャッシュをクリアする。または、最後に呼び出されてからタイムアウト時間が経過したら次回キャッシュをクリアしてから再度始める。
@@ -101,6 +122,14 @@ fileはやっかい。
 方が良いかもしれない。でも勝手に作られるのを嫌がる人もいるだろう。
 customizeの方が手軽だと思う人もいるかもしれない。
 選択出来るようにするしか。
+** TODO いくつかpath内のエスケープシーケンスが問題を引き起こすケースがある
+[[*エスケープシーケンスを含むパスを正しく補完できない][エスケープシーケンスを含むパスを正しく補完できない]]で大半は潰したが、問題が残っている。
+- fileタイプで[[elisp-function:read-file-name-internal]]関数を使っている所
+- helpタイプで[[elisp-function:elisp--completion-local-symbols]]関数を使っている所
+- elispタイプで[[elisp-function:elisp-completion-at-point]]関数を使っている所
+- 末尾で無くなることによって、これまで必要だった\が不要になる所
+  [[file:C:\Users\\]]は有効なパスだが、[[file:C:\Users\::8]] のように::を付けた瞬間に末尾に\を一つ減らさなければならない。
+
 * Finished
 ** DONE 「#」で始まる内部リンクを補完する(customid)
 CLOSED: [2024-02-24 Sat 13:30]
@@ -308,3 +337,41 @@ org-link-completion-table-with-alist-searchでの補完は強制的に部分一�
 [[elisp-function:completion-all-completions]]を使う必要がある。結果は少し特殊なので注意が必要。リストの最後のcdrにはbase-sizeという整数値が入る。
 
 より正しく動作させるためには、all-completionsだけでなくtry-completionの方も修正する必要がある。try-completionが全候補の中の一つに正確にマッチする文字列を返してしまうと、そこで補完が完了してしまう。値と正確に一致したときに値がキーにならない。なので、そういうときは、値が正確に一致するなら対応するキーを返す。
+** DONE エスケープシーケンスを含むパスを正しく補完できない
+CLOSED: [2024-03-01 Fri 20:13]
+例えば <<[type:\[path]>> ←へ飛ぶ正しいリンクは [[\[type:\\\[path\]]] だが、[[で補完しても[[[type:\[path]となってしまう。
+他にもfile他でpathの中にエスケープシーケンスがあった場合にできないかも？
+path-from-other-linksのように他のpathから直接コピーしてくるものは大丈夫なはず。
+他のソースから持ってくる場合は、path、descそれぞれにあったエスケープ処理をすべき。
+
+容疑者は全てのパスを補完する部分。
+
+- Untyped
+  - [[elisp-function:org-link-completion-collect-custom-id]] => エスケープした
+  - [[elisp-function:org-link-completion-collect-heading]] => エスケープした
+  - [[elisp-function:org-link-completion-collect-coderef]] => エスケープした(org-src-coderef-regexpが生成する正規表現にマッチしないので意味が無いかもしれない。マッチしないので候補の一覧に出ない。無理矢理作れば一応ジャンプ自体は出来る)
+  - [[elisp-function:org-link-completion-collect-dedicated-target]] => エスケープした
+  - [[elisp-function:org-link-completion-collect-element-names]] => エスケープした
+- Typed
+  - [[elisp-function:org-link-completion-collect-path-from-other-links]] => 問題なし
+  - [[elisp-function:org-link-completion-collect-path-from-favorite-links]] => エスケープした
+  - [[elisp-function:org-link-completion-path-file]] => ファイル名を取得するときにunescapeする。でないと[]を含むファイル名の中身を参照できない。
+  - [[elisp-function:org-link-completion-path-file-file]] => × *read-file-name-internalを使っているのでエスケープするのは困難。*
+  - [[elisp-function:org-link-completion-path-file-custom-id]] => 上で対策済み
+  - [[elisp-function:org-link-completion-path-file-heading]] => 上で対策済み
+  - [[elisp-function:org-link-completion-path-file-coderef]] => 上で対策済み
+  - [[elisp-function:org-link-completion-path-file-search]] => 上で対策済み
+  - [[elisp-function:org-link-completion-file-without-options]] => ファイル名を取得するときにunescapeする。でないと[]を含むファイル名の中身を参照できない。
+  - [[elisp-function:org-link-completion-path-id]] => 一応エスケープした
+  - [[elisp-function:org-link-completion-path-help]] => *難しいので保留*
+  - [[elisp-function:org-link-completion-path-elisp]] => *難しいので保留*
+  - [[elisp-function:org-link-completion-path-info]] => エスケープ・アンエスケープした
+  - [[elisp-function:org-link-completion-collect-heading-by-id]] => unescape
+  - [[elisp-function:org-link-completion-collect-path]] => unescape
+  - descriptionをpathから持ってくる場合unescapeが必要 => parse-let で pathを取得しているところを一通り調べて対処した
+
+*注意: 部分的にエスケープすると正しい結果が得られない場合がある。*
+
+<file>::<option> で hoge\::oke は本来 (org-link-escape "hoge\\::oke") => hoge\::oke とそのままになるが、hoge\ と ::oke を別々にエスケープして連結すると (concat (org-link-escape "hoge\\") "::oke") => hoge\\::oke となって\が増えてしまう。行末\は特別に処理するべきだが、分割すると行末判定が変わってしまうので。ただ、ファイルパスの末尾に\が来るのはディレクトリの時だけなので、それに対して::でオプションを付けることは無いので問題は顕在化しない。
+
+本来は連結してから最後にescapeすべきだが、現実には少々難しい。pathの中身を部分毎に補完しているので。

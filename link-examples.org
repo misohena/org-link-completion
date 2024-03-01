@@ -11,15 +11,18 @@
     - [[#
     - [[#custom-id-example-1][
     - [[#custom-id-example-1][Custom ID Example 1]]
+    - [[#custom-id-escape\\\[
   - Heading
     - [[*
     - [[*Target Example][
     - [[*Target Example][Target Example Section]]
+    - [[*Heading Escape\\\[
   - Coderef
     - [[(
     - [[(back)][
     - [[(back2)][
     - [[(hello-world)]["Hello, \\[[World]@@-:@@]// !!"))]]  (Export Snippet Hack)
+    - [[(back2)][escape-
   - Search
     - [[
     - [[Apple][
@@ -31,9 +34,13 @@
     - [[My
     - [[My Target][
     - [[Unknown Target][
+    - [[Target Escape\\\[
+    - [[element-escape-\\\[
     - [[neverusedtypename:
     - [[neverusedtypename:foobar]]
     - [[.emacs][
+    - [[\[type:\\\[p
+    - [[\[type:\\\[path\]]]
 - External Links
   - Relative Path
     - [[./
@@ -47,6 +54,13 @@
     - [[./link-examples.org::*
     - [[./link-examples.org::(
     - [[./link-examples.org::/
+    - [[./link-examples.org::Target Escape\\\[
+    - [[./link-examples.org::#custom-id-escape\\\[
+    - [[./link-examples.org::*Heading Escape\\\[
+    - [[./link-examples.org::(escape-\[br\\\[ac\k\\\]et\])
+    - [[./link-examples.org::/\[a-z\]+/]
+    - [[./example/example\[bracket\].org::*
+    - [[./example/example\[bracket\].org][
   - Absolute Path
     - [[/
     - [[\
@@ -85,6 +99,9 @@
   - [[file:README.org][
   - [[file:/home/
   - [[file:/home/][
+  - [[file:\[bracket\]]
+  - [[file:c:\Users\\]
+  - [[file:c:\Users\::Public
   - [[file:link-examples.org::Danraku
   - [[file:README.org::*Setup]
   - [[file:README.org::#custom-id-example-2
@@ -151,6 +168,8 @@
   - [[*Unsupported][If description contains [[, completion is not possible
   - [[*Unsupported][If description contains [[, completion is not possible on the right side of it]]
 
+<<Target Escape\[left[desu\1\\2\\\3\\\\4]right\]yo\>>This is a dedicated target.
+
 * Not Link
 - [[My Target\][description]]
 - [[My [Target][description]]
@@ -168,6 +187,8 @@
 <<ラジオターゲット>>←にラジオターゲットという名前のdedicated targetがあるんだけど。[[ラジオターゲット]]からリンクしちゃうもんね。
 
 三単語。<<My Target Desuyo>>
+
+<<[type:\[path]>> type:path syntax.
 
 ** List
 - Apple 15 <<Apple>>
@@ -196,6 +217,13 @@ description list
 :PROPERTIES:
 :CUSTOM_ID: custom-id-example-2
 :END:
+
+** Custom ID with Escape Chars
+:PROPERTIES:
+:CUSTOM_ID: custom-id-escape\[left[desu\1\\2\\\3\\\\4]right\]yo\
+:END:
+
+** Heading Escape\[left[desu\1\\2\\\3\\\\4]right\]yo\
 
 ** Source Blocks
 :PROPERTIES:
@@ -233,6 +261,18 @@ description list
 #+end_src
 
 [[(konnichiwa-sekai)][(konnichiwa-sekai)行目]]
+
+#+name: element-escape-\[left[desu\1\\2\\\3\\\\4]right\]yo\
+#+begin_src elisp -n -r
+(+
+ 1     (ref:escape-[br\[ac\k\]et])
+ 2     (ref:escape-[br\[ac\k\]et\])
+ 3)    (ref:escape-/o_o\)
+#+end_src
+
+1. [[(escape-\[br\\\[ac\k\\\]et\])]]
+2. [[(escape-\[br\\\[ac\k\\\]et\\\])]]
+3. [[(escape-/o_o\)]] <= Not \\)
 
 ** Example Block
 

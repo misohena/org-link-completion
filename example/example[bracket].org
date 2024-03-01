@@ -1,0 +1,7 @@
+#+TITLE: Bracket File Name
+
+* Heading 1
+
+* Heading 2
+
+* Heading Escape \[left[desu\1\\2\\\3\\\\4]right\]yo\

@@ -558,7 +558,10 @@ For example:
       (cl-loop while (re-search-forward re nil t)
                for id = (org-entry-get (point) "CUSTOM_ID" nil t)
                when id
-               collect id))))
+               ;; Escape for <path> (NOTE: When concatenating an
+               ;; escaped string with another string, modify the
+               ;; trailing \)
+               collect (org-link-escape id)))))
 
 ;;;;;; Heading Path
 
@@ -590,7 +593,10 @@ For example:
                                 ;; or nil
                                 (org-get-heading t t t t))))
              when heading
-             collect heading)))
+             ;; Escape for <path> (NOTE: When concatenating an
+             ;; escaped string with another string, modify the
+             ;; trailing \)
+             collect (org-link-escape heading))))
 
 ;;;;;; Coderef Path
 
@@ -636,10 +642,18 @@ For example:
                          (org-element-property :post-affiliated element)))
             ;; For each coderef
             (let ((re-coderef (concat ".*?"
+                                      ;; TODO: Allow more character types?
                                       (org-src-coderef-regexp
                                        (org-src-coderef-format element)))))
               (while (re-search-forward re-coderef block-end t)
-                (push (match-string-no-properties 3) result))))
+                ;; Escape for <path> (NOTE: When concatenating an
+                ;; escaped string with another string, modify the
+                ;; trailing \)
+                ;; NOTE2: Actually this doesn't make sense because
+                ;; `org-src-coderef-regexp' doesn't allow characters
+                ;; that should be escaped
+                (push (org-link-escape (match-string-no-properties 3))
+                      result))))
           (goto-char block-end)))
       (nreverse result))))
 
@@ -678,7 +692,10 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
                            (match-string-no-properties 1)
                            "Dedicated")
              when target
-             collect target)))
+             ;; Escape for <path> (NOTE: When concatenating an
+             ;; escaped string with another string, modify the
+             ;; trailing \)
+             collect (org-link-escape target))))
 
 (defun org-link-completion-collect-element-names ()
   "Collect all element names (#+NAME:) from the current buffer."
@@ -686,8 +703,12 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
     (goto-char (point-min))
     (cl-loop while (re-search-forward "^[ \t]*#\\+NAME:[ \t]*\\(.*?\\)[ \t]*$"
                                       nil t)
+             ;; Escape for <path> (NOTE: When concatenating an
+             ;; escaped string with another string, modify the
+             ;; trailing \)
              collect (org-link-completion-annotate
-                      (match-string-no-properties 1)
+                      (org-link-escape
+                       (match-string-no-properties 1))
                       "Name"))))
 
 ;;;;; Untyped Description
@@ -728,7 +749,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
   (org-link-completion-parse-let :desc (path)
     ;; Extract from target location
     (save-excursion
-      (when (org-link-completion-link-search path)
+      (when (org-link-completion-link-search (org-link-unescape path))
         (org-link-completion-string-list
          (org-link-completion-get-heading))))))
 
@@ -767,7 +788,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
   (org-link-completion-parse-let :desc (path)
     ;; Extract from target location
     (save-excursion
-      (when (org-link-completion-link-search path)
+      (when (org-link-completion-link-search (org-link-unescape path))
         (nconc
          ;; Current line text
          (org-link-completion-call
@@ -821,7 +842,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
   (org-link-completion-parse-let :desc (path)
     ;; Extract from target location
     (save-excursion
-      (when (org-link-completion-link-search path)
+      (when (org-link-completion-link-search (org-link-unescape path))
         (nconc
          ;; Current line text
          (org-link-completion-call
@@ -855,7 +876,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
   (org-link-completion-parse-let :desc (path) ;; "(<coderef>)" format
     (org-link-completion-string-list
      (org-link-completion-annotate
-      (org-link-completion-default-coderef-description path)
+      (org-link-completion-default-coderef-description (org-link-unescape path))
       "Format"))))
 
 (defconst org-link-completion-default-coderef-description-format-dictionary
@@ -946,9 +967,24 @@ This function also works for `file+sys:' and `file+emacs:' link types."
             (org-link-completion-path-file-option-beg path-beg path-end))
            (has-option (and option-beg (<= option-beg (point))))
            (file (org-link-completion-file-expand-empty
-                  (buffer-substring-no-properties
-                   path-beg
-                   (if option-beg (- option-beg 2) path-end))))
+                  ;; Unescape from <path>
+                  ;; NOTE: Handle the trailing \ correctly.
+                  ;; Example:
+                  ;;  filename\ => Invalid Syntax
+                  ;;  filename\\ => filename\
+                  ;;  filename\::123 => filename\ (Not filename)
+                  ;;  filename\\::123 => filename\\ (Not filename\)
+                  (if option-beg
+                      ;; Remove trailing ::
+                      (substring
+                       ;; Unescape
+                       (org-link-unescape
+                        ;; Include trailing ::
+                        (buffer-substring-no-properties path-beg option-beg))
+                       0 -2)
+                    (org-link-unescape
+                     (buffer-substring-no-properties
+                      path-beg path-end)))))
            (kind (if has-option
                      (pcase (char-after option-beg)
                        (?# 'custom-id)
@@ -1037,6 +1073,10 @@ This function also works for `file+sys:' and `file+emacs:' link types."
    (org-link-completion-file-without-options path)))
 
 (defun org-link-completion-file-without-options (path)
+  ;; NOTE: Unescape the entire PATH at once to handle the trailing `\'
+  ;; correctly.
+  (setq path (org-link-unescape path))
+
   ;; Find first `::' (See: `org-link-open-as-file')
   (if (string-match "\\`\\(.*?\\)::" path)
       (match-string 1 path)
@@ -1158,7 +1198,12 @@ remains, but processing will be faster the next time."
                            (org-link-completion-collect-id-heading-on-entry
                             file)))
                  (let* ((heading (substring-no-properties heading))
-                        (id (org-link-completion-annotate id heading)))
+                        (id (org-link-completion-annotate
+                             ;; Escape for <path>
+                             ;; I don't think this is necessary, but
+                             ;; just in case.
+                             (org-link-escape id)
+                             heading)))
                    (push (cons id heading) alist)))))))
        org-link-completion-collect-id-use-find-file-noselect))
     (nreverse alist)))
@@ -1245,7 +1290,7 @@ remains, but processing will be faster the next time."
 (defun org-link-completion-collect-heading-by-id ()
   (org-link-completion-parse-let :desc (path)
     (org-link-completion-string-list
-     (org-link-completion-get-heading-by-id path))))
+     (org-link-completion-get-heading-by-id (org-link-unescape path)))))
 
 (defun org-link-completion-get-heading-by-id (id)
   (when-let ((file (org-id-find-id-file id))) ;; or current file
@@ -1372,14 +1417,22 @@ remains, but processing will be faster the next time."
 
       (if on-nodename
           ;; [[info:<filename>#<nodename>
-          (let ((filename (buffer-substring-no-properties path-beg file-end)))
+          (let ((filename
+                 ;; Remove #
+                 (substring
+                  (org-link-unescape ;; NOTE: trailing `\'
+                   ;; Include #
+                   (buffer-substring-no-properties path-beg
+                                                   (1+ file-end)))
+                  0 -1)))
             (org-link-completion-capf-result
              (1+ file-end) path-end
              (org-link-completion-collect-info-node-names filename)
              :kind 'text))
         ;; [[info:<filename>
         (org-link-completion-capf-result
-         path-beg file-end ;; Include #
+         path-beg
+         (if (< file-end path-end) (1+ file-end) file-end) ;; Include #
          (org-link-completion-table-with-alist-search
           #'org-link-completion-collect-info-file-title-alist)
          :kind 'file)))))
@@ -1389,8 +1442,10 @@ remains, but processing will be faster the next time."
   "Return an alist of info files and their titles."
   (cl-loop for (title . (filename . nodename))
            in (org-link-completion-collect-info-sub-nodes "dir" "Top")
-           collect (cons (org-link-completion-annotate (concat filename "#")
-                                                       title)
+           collect (cons (org-link-completion-annotate
+                          (org-link-escape
+                           (concat filename "#"))
+                          title)
                          title)))
 
 (defun org-link-completion-collect-info-sub-nodes (filename nodename)
@@ -1417,7 +1472,9 @@ remains, but processing will be faster the next time."
         (goto-char (point-min))
         (while (and (search-forward "\n\^_\nFile:" nil 'move)
                     (search-forward "Node: " nil 'move))
-          (push (substring-no-properties (Info-following-node-name)) names)))
+          (push (org-link-escape
+                 (substring-no-properties (Info-following-node-name)))
+                names)))
       (nreverse names))))
 
 
@@ -1459,6 +1516,7 @@ Used by the
 
 (defun org-link-completion-collect-default-info-description ()
   (org-link-completion-parse-let :desc (path)
+    (setq path (org-link-unescape path))
     (when-let ((pos (seq-position path ?#)))
       (org-link-completion-string-list
        (org-link-completion-annotate
@@ -1469,6 +1527,7 @@ Used by the
 
 (defun org-link-completion-collect-info-node-name ()
   (org-link-completion-parse-let :desc (path)
+    (setq path (org-link-unescape path))
     (when-let ((pos (seq-position path ?#)))
       (org-link-completion-string-list
        (org-link-completion-annotate
@@ -1506,6 +1565,8 @@ Used by the
             (unless (= (+ (match-beginning 0) 2) type-beg)
               (let ((path (match-string-no-properties 1)))
                 (unless (member path table)
+                  ;; Do not escape (`org-link-escape') for path
+                  ;; Already escaped in the other link
                   (push path table)))))
           table)))))
 
@@ -1565,7 +1626,7 @@ completion candidates."
     (unless (eq (org-element-type element) 'link)
       (error "No link at point"))
     (let* ((type (org-element-property :type element))
-           (path (org-element-property :path element))
+           (path (org-element-property :path element)) ;; Already unescaped
            (desc-beg (org-element-property :contents-begin element))
            (desc-end (org-element-property :contents-end element))
            (desc (and desc-beg desc-end
@@ -1601,8 +1662,11 @@ completion candidates."
 
 (defun org-link-completion-collect-path-from-favorite-links ()
   (org-link-completion-parse-let :path (type)
-    (mapcar #'car (alist-get type org-link-completion-favorite-links
-                             nil nil #'string=))))
+    (mapcar (lambda (path-desc)
+              ;; Escape for <path>
+              (org-link-escape (car path-desc)))
+            (alist-get type org-link-completion-favorite-links
+                       nil nil #'string=))))
 
 ;; Description
 
@@ -1616,6 +1680,7 @@ completion candidates."
 
 (defun org-link-completion-collect-description-from-favorite-links ()
   (org-link-completion-parse-let :desc (type path)
+    (setq path (org-link-unescape path))
     (cl-loop for (favorite-path favorite-desc)
              in (alist-get type org-link-completion-favorite-links
                            nil nil #'string=)
@@ -1833,14 +1898,14 @@ and simply return nil."
   (org-link-completion-parse-let :desc (path)
     (org-link-completion-string-list
      (org-link-completion-annotate
-      (org-link-completion-strip-internal-link path)
+      (org-link-completion-strip-internal-link (org-link-unescape path))
       "Path"))))
 
 (defun org-link-completion-collect-path ()
   "Collect a path of the link at point."
   (org-link-completion-parse-let :desc (path)
     (org-link-completion-string-list
-     (org-link-completion-annotate path "Path"))))
+     (org-link-completion-annotate (org-link-unescape path) "Path"))))
 
 ;;;;; Propertize
 
