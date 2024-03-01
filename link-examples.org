@@ -46,6 +46,7 @@
     - [[./link-examples.org::#
     - [[./link-examples.org::*
     - [[./link-examples.org::(
+    - [[./link-examples.org::/
   - Absolute Path
     - [[/
     - [[\
@@ -63,6 +64,7 @@
     - [[~/emacs/lisp/org-link-completion/link-examples.org::#
     - [[~/emacs/lisp/org-link-completion/link-examples.org::*
     - [[~/emacs/lisp/org-link-completion/link-examples.org::(
+    - [[~/emacs/lisp/org-link-completion/link-examples.org::/
   - Not a Path
     - [[README.org
     - [[.
@@ -97,10 +99,14 @@
   - [[file:./link-examples.org::#
   - [[file:./link-examples.org::*
   - [[file:./link-examples.org::(
+  - [[file:./link-examples.org::/
   - [[file:::
   - [[file:::#
   - [[file:::*
   - [[file:::(
+  - [[file:::/
+  - [[file:::/Shinonomesou .*Senburi-zoku$/]]
+  - [[file:::/^#\+TITLE:/]]
 - id
   - [[id:
   - [[id:fba836c2-5ae8-4f2a-a559-bc5dbbe90865][
