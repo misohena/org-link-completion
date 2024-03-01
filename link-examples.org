@@ -146,6 +146,9 @@
    Target][description]]
   - [[Link Target][desc
    ription]]
+- Description contains [[
+  - [[*Unsupported][If description contains [[, completion is not possible
+  - [[*Unsupported][If description contains [[, completion is not possible on the right side of it]]
 
 * Not Link
 - [[My Target\][description]]
