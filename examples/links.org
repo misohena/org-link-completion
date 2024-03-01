@@ -47,20 +47,20 @@
     - [[./li
     - [[../
     - [[../][
-    - [[../org-link-completion/
-    - [[../org-link-completion/README.org][
-    - [[./link-examples.org::
-    - [[./link-examples.org::#
-    - [[./link-examples.org::*
-    - [[./link-examples.org::(
-    - [[./link-examples.org::/
-    - [[./link-examples.org::Target Escape\\\[
-    - [[./link-examples.org::#custom-id-escape\\\[
-    - [[./link-examples.org::*Heading Escape\\\[
-    - [[./link-examples.org::(escape-\[br\\\[ac\k\\\]et\])
-    - [[./link-examples.org::/\[a-z\]+/]
-    - [[./example/example\[bracket\].org::*
-    - [[./example/example\[bracket\].org][
+    - [[../../org-link-completion/
+    - [[../../org-link-completion/README.org][
+    - [[./links.org::
+    - [[./links.org::#
+    - [[./links.org::*
+    - [[./links.org::(
+    - [[./links.org::/
+    - [[./links.org::Target Escape\\\[
+    - [[./links.org::#custom-id-escape\\\[
+    - [[./links.org::*Heading Escape\\\[
+    - [[./links.org::(escape-\[br\\\[ac\k\\\]et\])
+    - [[./links.org::/\[a-z\]+/]
+    - [[./\[bracket\].org::*
+    - [[./\[bracket\].org][
   - Absolute Path
     - [[/
     - [[\
@@ -74,13 +74,13 @@
     - [[~\.emacs.d/]
     - [[c:/home/
     - [[c:\home\
-    - [[~/emacs/lisp/org-link-completion/link-examples.org::
-    - [[~/emacs/lisp/org-link-completion/link-examples.org::#
-    - [[~/emacs/lisp/org-link-completion/link-examples.org::*
-    - [[~/emacs/lisp/org-link-completion/link-examples.org::(
-    - [[~/emacs/lisp/org-link-completion/link-examples.org::/
+    - [[~/emacs/lisp/org-link-completion/examples/links.org::
+    - [[~/emacs/lisp/org-link-completion/examples/links.org::#
+    - [[~/emacs/lisp/org-link-completion/examples/links.org::*
+    - [[~/emacs/lisp/org-link-completion/examples/links.org::(
+    - [[~/emacs/lisp/org-link-completion/examples/links.org::/
   - Not a Path
-    - [[README.org
+    - [[links.org
     - [[.
     - [[..
     - [[.\li
@@ -95,28 +95,35 @@
 
 - [[
 - file
-  - [[file:README.org
-  - [[file:README.org][
+  - [[file:links.org
+  - [[file:links.org][
+  - [[file:../README.org
+  - [[file:../README.org][
   - [[file:/home/
   - [[file:/home/][
   - [[file:\[bracket\]]
   - [[file:c:\Users\\]
   - [[file:c:\Users\::Public
-  - [[file:link-examples.org::Danraku
-  - [[file:README.org::*Setup]
-  - [[file:README.org::#custom-id-example-2
+  - [[file:links.org::Danraku
+  - [[file:../README.org::*Setup]
+  - [[file:../README.org::#license
   - [[file:::*Link Target
   - [[file:.emacs][
   - [[file:][
-  - [[file:README.org::
-  - [[file:README.org::#
-  - [[file:README.org::*
-  - [[file:README.org::(
-  - [[file:./link-examples.org::
-  - [[file:./link-examples.org::#
-  - [[file:./link-examples.org::*
-  - [[file:./link-examples.org::(
-  - [[file:./link-examples.org::/
+  - [[file:links.org::
+  - [[file:links.org::#
+  - [[file:links.org::*
+  - [[file:links.org::(
+  - [[file:links.org::/
+  - [[file:../README.org::
+  - [[file:../README.org::#
+  - [[file:../README.org::*
+  - [[file:../README.org::(
+  - [[file:./\[bracket\].org::
+  - [[file:./\[bracket\].org::#
+  - [[file:./\[bracket\].org::*
+  - [[file:./\[bracket\].org::(
+  - [[file:./\[bracket\].org::/
   - [[file:::
   - [[file:::#
   - [[file:::*

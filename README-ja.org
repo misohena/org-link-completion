@@ -64,7 +64,7 @@
 
 また、使用例として、私が使っているブログ投稿へのリンクを補完する関数を後ほど紹介します。
 
-様々なリンクの補完を試せるように[[file:link-examples.org][link-examples.org]]が用意されています。
+様々なリンクの補完を試せるように[[file:examples/links.org][examples/links.org]]が用意されています。
 
 * セットアップ
 :PROPERTIES:
