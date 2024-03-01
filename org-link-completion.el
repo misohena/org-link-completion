@@ -1662,27 +1662,126 @@ and simply return nil."
      table
      '((display-sort-function . identity)))))
 
+;;;;; Complete Both Key and Value of Alist
+
 (defun org-link-completion-table-with-alist-search (fun-collect-alist)
   ;; I used the idea from the following URL as a reference.
   ;; https://emacs.stackexchange.com/a/74550
   ;; completion - completing-read, search also in annotations -
   ;;  Emacs Stack Exchange
-  (lambda (string predicate action)
+  (lambda (string pred action)
     ;;(message "Complete alist action:%s string:%s" action string)
     (pcase action
-      ('t (cl-loop with string-re = (regexp-quote string)
-                   for cell in (funcall fun-collect-alist)
-                   for key = (car cell)
-                   for value = (cdr cell)
-                   when (and
-                         (or (null predicate)
-                             (funcall predicate cell))
-                         ;; TODO: respect completion style? Use all-completios?
-                         (or (let ((case-fold-search t)) ;; Ignore case (?)
-                               (string-match-p string-re key))
-                             (let ((case-fold-search t)) ;; Ignore case (?)
-                               (string-match-p string-re value))))
-                   collect key)))))
+      ('nil
+       (org-link-completion-alist-try-completion
+        string (funcall fun-collect-alist) pred (length string)))
+      ('t
+       (org-link-completion-alist-all-completions
+        string (funcall fun-collect-alist) pred (length string)))
+      (`(boundaries . ,suffix)
+       (cons 'boundaries (cons 0 (length suffix))))
+      ('lambda
+        (org-link-completion-alist-test-completion
+         string (funcall fun-collect-alist) pred (length string))))))
+
+(defun org-link-completion-alist-try-completion (string alist pred point)
+  (let ((result (completion-try-completion
+                 string
+                 (org-link-completion-alist-flatten alist)
+                 pred point)))
+    ;;(message "try result=%s" (prin1-to-string result))
+    (pcase result
+      ('t
+       (if (assoc string alist)
+           ;; STRING is an exact match key => OK
+           t
+         (let ((keys (cl-loop for (key . value) in alist
+                              when (string= value string)
+                              collect key)))
+           (if (= (length keys) 1)
+               ;; STRING matches only one value => Replace with key
+               (car keys)
+             ;; STRING matches multiple values or neither key nor value
+             string))))
+      (`(,newtext . ,_newpoint)
+       (if (assoc newtext alist)
+           ;; STRING is an exact match key => OK
+           newtext
+         (let ((keys (cl-loop for (key . value) in alist
+                              when (string= value newtext)
+                              collect key)))
+           (if (= (length keys) 1)
+               ;; NEWTEXT matches only one value => Replace with key
+               (car keys)
+             ;; NEWTEXT matches multiple values or neither key nor value
+             newtext))))
+      (_ nil))))
+
+(defun org-link-completion-alist-test-completion (string alist pred _point)
+  ;; Accept only when STRING is a key
+  (and (or (null pred)
+           (funcall pred string))
+       (assoc string alist)
+       t))
+
+(defconst org-link-completion-alist-all-completions-use-styles t)
+
+(defun org-link-completion-alist-all-completions (string alist pred point)
+  (cond
+   ((string-empty-p string)
+    (mapcar #'car alist))
+   (org-link-completion-alist-all-completions-use-styles
+    (org-link-completion-alist-all-completions-styles string alist pred
+                                                      point))
+   (t
+    (org-link-completion-alist-all-completions-substr string alist pred
+                                                      point))))
+
+(defun org-link-completion-alist-all-completions-substr (string
+                                                         alist pred _point)
+  ;; Old implementation that does not consider completion-styles.
+  (cl-loop with string-re = (regexp-quote string)
+           for cell in alist
+           for key = (car cell)
+           for value = (cdr cell)
+           when (and
+                 (or (null pred)
+                     (funcall pred cell))
+                 ;; Ignore `completion-styles'.
+                 (or (let ((case-fold-search t)) ;; Ignore case (?)
+                       (string-match-p string-re key))
+                     (let ((case-fold-search t)) ;; Ignore case (?)
+                       (string-match-p string-re value))))
+           collect key))
+
+(defun org-link-completion-alist-all-completions-styles (string
+                                                         alist pred point)
+  (org-link-completion-alist-flat-list-keys
+   (completion-all-completions string
+                               (org-link-completion-alist-flatten alist)
+                               pred point)))
+
+(defun org-link-completion-alist-flatten (alist)
+  (let* ((head (cons nil nil))
+         (last head))
+    (cl-loop for (key . value) in alist
+             do
+             (setcdr last (cons key nil))
+             (setq last (cdr last))
+             (setcdr last (cons
+                           (propertize value 'org-link-completion-key key)
+                           nil))
+             (setq last (cdr last)))
+    (cdr head)))
+
+(defun org-link-completion-alist-flat-list-keys (flat-list)
+  (let (keys)
+    (cl-loop for x in flat-list ;; Ignore last base-size (cdr)
+             for key = (or (get-text-property 0 'org-link-completion-key x)
+                           x)
+             unless (member key keys)
+             do (push key keys))
+    (nreverse keys)))
 
 ;;;;; Return value of completion-at-point-functions
 

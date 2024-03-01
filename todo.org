@@ -1,8 +1,6 @@
 #+TITLE: やりたいことリスト
 
 * Inbox
-** TODO alist補完でcompletion-stylesを尊重する
-org-link-completion-table-with-alist-searchでの補完は強制的に部分一致になってしまっている。keyとvalueを分けてall-completionsを実行すれば実現出来る？
 
 ** TODO Example Blockの検索方法が正しいか検証する
 とりあえずorg-babel-src-block-regexpの_srcを_exampleに置換して間に合わせたが、それで大丈夫か確認する。
@@ -303,3 +301,10 @@ org-link-completion-define-capf-with-collectorsみたいな名前のマクロで
 問題は知らない人がぱっと見で理解しづらいということ。カスタマイズ変数と関数があることが分かりづらい。
 
 →マクロを作ってみたけどやっぱり見づらいのでやめた。代わりにorg-link-completion-capf-desc-with-collectors関数を作ってcollectorsを使った説明部の補完関数の作成を短いコードで出来るようにした。
+** DONE alist補完でcompletion-stylesを尊重する
+CLOSED: [2024-03-01 Fri 14:26]
+org-link-completion-table-with-alist-searchでの補完は強制的に部分一致になってしまっている。 +keyとvalueを分けてall-completionsを実行すれば実現出来る？+
+
+[[elisp-function:completion-all-completions]]を使う必要がある。結果は少し特殊なので注意が必要。リストの最後のcdrにはbase-sizeという整数値が入る。
+
+より正しく動作させるためには、all-completionsだけでなくtry-completionの方も修正する必要がある。try-completionが全候補の中の一つに正確にマッチする文字列を返してしまうと、そこで補完が完了してしまう。値と正確に一致したときに値がキーにならない。なので、そういうときは、値が正確に一致するなら対応するキーを返す。

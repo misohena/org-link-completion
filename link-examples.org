@@ -109,6 +109,7 @@
   - [[file:::/^#\+TITLE:/]]
 - id
   - [[id:
+  - [[id:Entry with ID
   - [[id:fba836c2-5ae8-4f2a-a559-bc5dbbe90865][
   - [[id:8117e6ec-de24-48df-9986-727e8ed08761][
   - [[id:8117e6ec-de24-48df-9986-727e8ed08761][ID:8117e6ec-de24-48df-9986-727e8ed08761]]
@@ -252,6 +253,17 @@ description list
 :PROPERTIES:
 :ID:       fba836c2-5ae8-4f2a-a559-bc5dbbe90865
 :END:
+
+** Entry with ID Property
+:PROPERTIES:
+:ID:       f4a621a7-412e-4986-9932-7aaa18c94ee9
+:END:
+
+** Entry with ID Property
+:PROPERTIES:
+:ID:       a80163af-a84d-41fa-a1e6-104125a5c9c0
+:END:
+Same Heading Text
 
 ** HTTPS
 
