@@ -59,6 +59,18 @@
                           'org-link-completion-at-point nil t)))))
 
 
+;;;; Macros
+
+(defmacro org-link-completion-search-in-buffer (&rest body)
+  "Perform pre-processing and post-processing when searching for something
+from the entire current buffer."
+  (declare (indent 0))
+  `(save-excursion
+     (save-restriction
+       (widen)
+       (goto-char (point-min))
+       ,@body)))
+
 ;;;; Parse Link At Point
 
 ;; Without type:
@@ -550,8 +562,7 @@ For example:
 
 (defun org-link-completion-collect-custom-id ()
   "Collect all :CUSTOM_ID: property values from the current buffer."
-  (save-excursion
-    (goto-char (point-min))
+  (org-link-completion-search-in-buffer
     ;; See: `org-find-property'
     (let ((case-fold-search t)
           (re (org-re-property "CUSTOM_ID" nil nil nil)))
@@ -584,14 +595,13 @@ For example:
 
 (defun org-link-completion-collect-heading ()
   "Collect all heading text from the current buffer."
-  (save-excursion
-    (goto-char (point-min))
+  (org-link-completion-search-in-buffer
     (cl-loop while (re-search-forward (concat "^" org-outline-regexp) nil t)
              for heading = (ignore-errors
-                              (org-link--normalize-string
-                               (substring-no-properties
-                                ;; or nil
-                                (org-get-heading t t t t))))
+                             (org-link--normalize-string
+                              (substring-no-properties
+                               ;; or nil
+                               (org-get-heading t t t t))))
              when heading
              ;; Escape for <path> (NOTE: When concatenating an
              ;; escaped string with another string, modify the
@@ -620,8 +630,7 @@ For example:
 (defun org-link-completion-collect-coderef ()
   "Collect all coderef labels (ref:<label>) from the current buffer."
   ;; Ref: `org-link-search'
-  (save-excursion
-    (goto-char (point-min))
+  (org-link-completion-search-in-buffer
     (let (result
           (re-block (concat "\\(?:"
                             org-babel-src-block-regexp
@@ -685,8 +694,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 (defun org-link-completion-collect-dedicated-target ()
   "Collect all dedicated target (<<target>>) from the current buffer."
-  (save-excursion
-    (goto-char (point-min))
+  (org-link-completion-search-in-buffer
     (cl-loop while (re-search-forward org-target-regexp nil t)
              for target = (org-link-completion-annotate
                            (match-string-no-properties 1)
@@ -699,8 +707,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 
 (defun org-link-completion-collect-element-names ()
   "Collect all element names (#+NAME:) from the current buffer."
-  (save-excursion
-    (goto-char (point-min))
+  (org-link-completion-search-in-buffer
     (cl-loop while (re-search-forward "^[ \t]*#\\+NAME:[ \t]*\\(.*?\\)[ \t]*$"
                                       nil t)
              ;; Escape for <path> (NOTE: When concatenating an
@@ -748,7 +755,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 (defun org-link-completion-collect-custom-id-desc-from-around-target ()
   (org-link-completion-parse-let :desc (path)
     ;; Extract from target location
-    (save-excursion
+    (org-link-completion-search-in-buffer
       (when (org-link-completion-link-search (org-link-unescape path))
         (org-link-completion-string-list
          (org-link-completion-get-heading))))))
@@ -787,7 +794,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 (defun org-link-completion-collect-search-desc-from-around-target ()
   (org-link-completion-parse-let :desc (path)
     ;; Extract from target location
-    (save-excursion
+    (org-link-completion-search-in-buffer
       (when (org-link-completion-link-search (org-link-unescape path))
         (nconc
          ;; Current line text
@@ -841,7 +848,7 @@ NOTE: `[[mytarget' is treated as a link type named `mytarget:'."
 (defun org-link-completion-collect-coderef-desc-from-around-target ()
   (org-link-completion-parse-let :desc (path)
     ;; Extract from target location
-    (save-excursion
+    (org-link-completion-search-in-buffer
       (when (org-link-completion-link-search (org-link-unescape path))
         (nconc
          ;; Current line text
@@ -1135,8 +1142,7 @@ An example of an empty filename is: [[file:::*Heading]]"
 
 (defun org-link-completion-get-org-title ()
   "Read org-mode title from Current buffer."
-  (save-excursion
-    (goto-char (point-min))
+  (org-link-completion-search-in-buffer
     (let ((case-fold-search t))
       (when (re-search-forward
              "^#\\+TITLE: *\\(.*\\)$" nil t)
@@ -1552,8 +1558,7 @@ Used by the
 (defun org-link-completion-collect-path-from-other-links ()
   (org-link-completion-parse-let nil (type-beg type-end)
     (when (< type-beg type-end)
-      (save-excursion
-        (goto-char (point-min))
+      (org-link-completion-search-in-buffer
         (let ((re (concat
                    "\\[\\["
                    (regexp-quote
@@ -1588,8 +1593,7 @@ Used by the
     (unless link-beg (setq link-beg type-beg))
     (unless link-end (setq link-end path-end))
     (when (< link-beg link-end)
-      (save-excursion
-        (goto-char (point-min))
+      (org-link-completion-search-in-buffer
         (let ((re (concat "\\[\\["
                           (regexp-quote
                            (buffer-substring-no-properties link-beg link-end))

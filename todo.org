@@ -375,3 +375,14 @@ path-from-other-linksのように他のpathから直接コピーしてくるも�
 <file>::<option> で hoge\::oke は本来 (org-link-escape "hoge\\::oke") => hoge\::oke とそのままになるが、hoge\ と ::oke を別々にエスケープして連結すると (concat (org-link-escape "hoge\\") "::oke") => hoge\\::oke となって\が増えてしまう。行末\は特別に処理するべきだが、分割すると行末判定が変わってしまうので。ただ、ファイルパスの末尾に\が来るのはディレクトリの時だけなので、それに対して::でオプションを付けることは無いので問題は顕在化しない。
 
 本来は連結してから最後にescapeすべきだが、現実には少々難しい。pathの中身を部分毎に補完しているので。
+** DONE ナローイングしていると範囲外の要素が補完候補に現れない
+CLOSED: [2025-03-27 Thu 17:48]
+[[https://github.com/misohena/org-link-completion/issues/1][Headline completion should account for the unnarowed buffer · Issue #1 · misohena/org-link-completion]]
+
+確かにwidenしてから検索した方が良い。
+
+案外あちこちで同様の問題がある。
+
+しかし、widenしてしまって良いのだろうか。候補をナローイングしている範囲に限定したい場合は本当に無いのだろうか。……まずほとんど無いと思うけど。
+
+一応org-link-completion-search-in-bufferというマクロを作って、その中でsave-excursion、save-restriction、widen、goto-char (point-min)する。必要であれば、そのマクロの動作を変えるカスタマイズ変数を追加すれば良い。
