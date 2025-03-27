@@ -404,7 +404,7 @@ The function must return the same format as functions added to
 To use this, do the following in org-mode buffer:
   (add-hook \\='completion-at-point-functions
             #\\='org-link-completion-at-point nil t)"
-  (when-let ((pos (org-link-completion-parse-at-point)))
+  (when-let* ((pos (org-link-completion-parse-at-point)))
     (let* ((org-link-completion-pos pos)
            (where (org-link-completion-pos-ref pos where))
            (type (org-link-completion-pos-ref pos type)))
@@ -1099,7 +1099,7 @@ An example of an empty filename is: [[file:::*Heading]]"
 
 (defun org-link-completion-collect-file-name ()
   (org-link-completion-parse-let :desc (path)
-    (when-let ((filepath (org-link-completion-file-path-part path)))
+    (when-let* ((filepath (org-link-completion-file-path-part path)))
       (org-link-completion-string-list
        (org-link-completion-annotate
         (file-name-nondirectory filepath)
@@ -1107,7 +1107,7 @@ An example of an empty filename is: [[file:::*Heading]]"
 
 (defun org-link-completion-collect-file-base ()
   (org-link-completion-parse-let :desc (path)
-    (when-let ((filepath (org-link-completion-file-path-part path)))
+    (when-let* ((filepath (org-link-completion-file-path-part path)))
       (let ((filename (file-name-nondirectory filepath)))
         (when (string-match "\\`\\(.[^.]*\\)" filename)
           (org-link-completion-string-list
@@ -1117,7 +1117,7 @@ An example of an empty filename is: [[file:::*Heading]]"
 
 (defun org-link-completion-collect-file-full-path ()
   (org-link-completion-parse-let :desc (path)
-    (when-let ((filepath (org-link-completion-file-path-part path)))
+    (when-let* ((filepath (org-link-completion-file-path-part path)))
       (org-link-completion-string-list
        (org-link-completion-annotate
         (expand-file-name filepath)
@@ -1198,11 +1198,11 @@ remains, but processing will be faster the next time."
        file 'org-mode
        (lambda ()
          (while (re-search-forward re nil t)
-           (when-let ((id (org-entry-get (point) "ID" nil t)))
+           (when-let* ((id (org-entry-get (point) "ID" nil t)))
              (unless (assoc id alist #'string=) ;; TODO: Ignore case?
-               (when-let ((heading
-                           (org-link-completion-collect-id-heading-on-entry
-                            file)))
+               (when-let* ((heading
+                            (org-link-completion-collect-id-heading-on-entry
+                             file)))
                  (let* ((heading (substring-no-properties heading))
                         (id (org-link-completion-annotate
                              ;; Escape for <path>
@@ -1215,7 +1215,7 @@ remains, but processing will be faster the next time."
     (nreverse alist)))
 
 (defun org-link-completion-collect-id-heading-on-entry (file)
-  (when-let ((heading (org-get-heading t t t t)))
+  (when-let* ((heading (org-get-heading t t t t)))
     ;; TODO: Customize
     ;; <heading> - <filename>
     (concat (substring-no-properties heading)
@@ -1299,13 +1299,13 @@ remains, but processing will be faster the next time."
      (org-link-completion-get-heading-by-id (org-link-unescape path)))))
 
 (defun org-link-completion-get-heading-by-id (id)
-  (when-let ((file (org-id-find-id-file id))) ;; or current file
+  (when-let* ((file (org-id-find-id-file id))) ;; or current file
     (org-link-completion-call-with-file
      file 'org-mode
      (lambda ()
-       (when-let ((pos (org-find-property "ID" id)))
+       (when-let* ((pos (org-find-property "ID" id)))
          (goto-char pos)
-         (when-let ((heading (org-get-heading t t t t)))
+         (when-let* ((heading (org-get-heading t t t t)))
            (substring-no-properties heading)))))))
 
 
@@ -1523,7 +1523,7 @@ Used by the
 (defun org-link-completion-collect-default-info-description ()
   (org-link-completion-parse-let :desc (path)
     (setq path (org-link-unescape path))
-    (when-let ((pos (seq-position path ?#)))
+    (when-let* ((pos (seq-position path ?#)))
       (org-link-completion-string-list
        (org-link-completion-annotate
         (org-link-completion-default-info-description
@@ -1534,7 +1534,7 @@ Used by the
 (defun org-link-completion-collect-info-node-name ()
   (org-link-completion-parse-let :desc (path)
     (setq path (org-link-unescape path))
-    (when-let ((pos (seq-position path ?#)))
+    (when-let* ((pos (seq-position path ?#)))
       (org-link-completion-string-list
        (org-link-completion-annotate
         (substring path (1+ pos))

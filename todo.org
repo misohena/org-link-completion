@@ -386,3 +386,5 @@ CLOSED: [2025-03-27 Thu 17:48]
 しかし、widenしてしまって良いのだろうか。候補をナローイングしている範囲に限定したい場合は本当に無いのだろうか。……まずほとんど無いと思うけど。
 
 一応org-link-completion-search-in-bufferというマクロを作って、その中でsave-excursion、save-restriction、widen、goto-char (point-min)する。必要であれば、そのマクロの動作を変えるカスタマイズ変数を追加すれば良い。
+** DONE when-letをwhen-let*へ置き換える。
+CLOSED: [2025-03-27 Thu 18:07]
